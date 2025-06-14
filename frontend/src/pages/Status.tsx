@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import FilterBar, { type FilterBarValue } from '../components/FilterBar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -12,8 +12,8 @@ const NUM_COLUMNS = 24;
 const CARRIAGES_PER_TRAIN = 5;
 const COLUMN_WIDTH_PERCENT = 100 / NUM_COLUMNS;
 const TRAIN_HEIGHT = 60; // px
-const TRAIN_START_COLUMNS = [0, 3, 6, 10, 15, 0, 3, 6, 10, 15]; // Example start columns for each train
-const GAP = -25; // px vertical gap between trains
+// const TRAIN_START_COLUMNS = [0, 3, 6, 10, 15, 0, 3, 6, 10, 15]; // Example start columns for each train
+// const GAP = -25; // px vertical gap between trains
 
 const initialFilter: FilterBarValue = {
   departure: null,
