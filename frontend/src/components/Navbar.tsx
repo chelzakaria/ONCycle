@@ -33,6 +33,16 @@ const Navbar: React.FC = () => {
         {/* Logo left-aligned */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', flexGrow: 0, marginRight: 48, textDecoration: 'none' }}>
           <img src="/logo.svg" alt="ONCycle Logo" style={{ height: 44, width: 'auto', display: 'block' }} />
+          <span style={{
+            marginLeft: 12,
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            color: '#FFFFFF',
+            fontFamily: 'Urbanist, sans-serif',
+            letterSpacing: '0.5px'
+          }}>
+            ONCycle
+          </span>
         </Link>
         {/* Centered Tabs */}
         <Box sx={{ 
