@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, AppBar, Toolbar, TextField, Paper, Typography, Button } from '@mui/material';
+import React from 'react';
+import { Box, AppBar, Toolbar, TextField, Paper, Typography, Button, Tooltip } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -8,108 +8,11 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { Dayjs } from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import SearchIcon from '@mui/icons-material/Search';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { trainTypeOptions, validRoutes, departureOptions } from '../utils/trainData';
+import dayjs from 'dayjs';
 
-// New color palette
-const palette = {
-  orange: '#FB7A31',
-  green: '#5DD384',
-  pink: '#FF5B77',
-  purple: '#6A55FF',
-  darkPurple: '#422DBB',
-  yellow: '#FAB902',
-  grayBg: '#6A6A6A',
-};
 
-// Define train type options with proper names
-const trainTypeOptions = [
-  { label: 'TGV', code: 'GV', color: palette.orange },
-  { label: 'Al Atlas', code: 'TLR', color: palette.pink },
-  { label: 'Navette', code: 'TNR', color: palette.purple},
-  { label: 'Train de ligne', code: 'TL', color: palette.yellow },
-];
-
-// Helper function to get train type details
-const getTrainTypeDetails = (code: string) => {
-  return trainTypeOptions.find(type => type.code === code) || trainTypeOptions[0];
-};
-
-// Define valid tuples with full data
-const validRoutes = [
-  { departure: 'CASA VOYAGEURS', arrival: 'TANGER', trainType: 'GV', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('GV').color },
-  { departure: 'TANGER', arrival: 'CASA VOYAGEURS', trainType: 'GV', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('GV').color },
-  { departure: 'CASA PORT', arrival: 'KENITRA', trainType: 'TNR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TNR').color },
-  { departure: 'KENITRA', arrival: 'CASA PORT', trainType: 'TNR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TNR').color },
-  { departure: 'AEROPORT MED V', arrival: 'CASA PORT', trainType: 'TNR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TNR').color },
-  { departure: 'CASA PORT', arrival: 'AEROPORT MED V', trainType: 'TNR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TNR').color },
-  { departure: 'CASA PORT', arrival: 'SETTAT', trainType: 'TNR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TNR').color },
-  { departure: 'SETTAT', arrival: 'CASA PORT', trainType: 'TNR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TNR').color },
-  { departure: 'EL JADIDA', arrival: 'CASA PORT', trainType: 'TNR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TNR').color },
-  { departure: 'CASA PORT', arrival: 'EL JADIDA', trainType: 'TNR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TNR').color },
-  { departure: 'FES', arrival: 'MARRAKECH', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'MARRAKECH', arrival: 'FES', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'FES', arrival: 'TANGER', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'CASA VOYAGEURS', arrival: 'NADOR', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'CASA VOYAGEURS', arrival: 'OUJDA', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'OUJDA', arrival: 'TANGER', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'OUJDA', arrival: 'CASA VOYAGEURS', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'TANGER', arrival: 'OUJDA', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'TANGER', arrival: 'FES', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'FES', arrival: 'CASA VOYAGEURS', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'NADOR', arrival: 'CASA VOYAGEURS', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'TANGER', arrival: 'MARRAKECH', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'MARRAKECH', arrival: 'TANGER', trainType: 'TLR', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TLR').color },
-  { departure: 'KENITRA', arrival: 'TANGER', trainType: 'TL', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TL').color },
-  { departure: 'TANGER', arrival: 'KENITRA', trainType: 'TL', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TL').color },
-  { departure: 'SAFI', arrival: 'BENGUERIR', trainType: 'TL', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TL').color },
-  { departure: 'BENGUERIR', arrival: 'SAFI', trainType: 'TL', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TL').color },
-  { departure: 'CASA VOYAGEURS', arrival: 'KHOURIBGA', trainType: 'TL', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TL').color },
-  { departure: 'KHOURIBGA', arrival: 'CASA VOYAGEURS', trainType: 'TL', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TL').color },
-  { departure: 'OUED ZEM', arrival: 'CASA VOYAGEURS', trainType: 'TL', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TL').color },
-  { departure: 'CASA VOYAGEURS', arrival: 'OUED ZEM', trainType: 'TL', departureColor: palette.green, arrivalColor: palette.orange, trainTypeColor: getTrainTypeDetails('TL').color },
-];
-
-// Get unique departures with full data
-const departureOptions = Array.from(new Set(validRoutes.map(r => r.departure))).map(label => {
-  const route = validRoutes.find(r => r.departure === label)!;
-  return { label, code: route.trainType, color: route.departureColor };
-});
-
-const arrivalOptions = [
-  { label: 'TANGER', code: 'GV', color: palette.orange },
-  { label: 'CASA VOYAGEURS', code: 'GV', color: palette.orange },
-  { label: 'KENITRA', code: 'TNR', color: palette.orange },
-  { label: 'CASA PORT', code: 'TNR', color: palette.orange },
-  { label: 'CASA PORT', code: 'TNR', color: palette.orange },
-  { label: 'AEROPORT MED V', code: 'TNR', color: palette.orange },
-  { label: 'CASA PORT', code: 'TNR', color: palette.orange },
-  { label: 'CASA PORT', code: 'TNR', color: palette.orange },
-  { label: 'SETTAT', code: 'TNR', color: palette.orange },
-  { label: 'EL JADIDA', code: 'TNR', color: palette.orange },
-  { label: 'CASA PORT', code: 'TNR', color: palette.orange },
-  { label: 'MARRAKECH', code: 'TLR', color: palette.orange },
-  { label: 'FES', code: 'TLR', color: palette.orange },
-  { label: 'TANGER', code: 'TLR', color: palette.orange },
-  { label: 'NADOR', code: 'TLR', color: palette.orange },
-  { label: 'OUJDA', code: 'TLR', color: palette.orange },
-  { label: 'TANGER', code: 'TLR', color: palette.orange },
-  { label: 'OUJDA', code: 'TLR', color: palette.orange },
-  { label: 'CASA VOYAGEURS', code: 'TLR', color: palette.orange },
-  { label: 'FES', code: 'TLR', color: palette.orange },
-  { label: 'CASA VOYAGEURS', code: 'TLR', color: palette.orange },
-  { label: 'TANGER', code: 'TLR', color: palette.orange },
-  { label: 'MARRAKECH', code: 'TLR', color: palette.orange },
-  { label: 'MARRAKECH', code: 'TLR', color: palette.orange },
-  { label: 'TANGER', code: 'TL', color: palette.orange },
-  { label: 'KENITRA', code: 'TL', color: palette.orange },
-  { label: 'SAFI', code: 'TL', color: palette.orange },
-  { label: 'BENGUERIR', code: 'TL', color: palette.orange },
-  { label: 'BENGUERIR', code: 'TL', color: palette.orange },
-  { label: 'CASA VOYAGEURS', code: 'TL', color: palette.orange },
-  { label: 'KHOURIBGA', code: 'TL', color: palette.orange },
-  { label: 'KHOURIBGA', code: 'TL', color: palette.orange },
-  { label: 'OUED ZEM', code: 'TL', color: palette.orange },
-  { label: 'CASA VOYAGEURS', code: 'TL', color: palette.orange },
-];
 
 // Types for filter values
 export type FilterBarValue = {
@@ -127,43 +30,149 @@ type FilterBarProps = {
 
 const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
   const { departure, arrival, trainType, date } = value;
+  const [lastSearchValues, setLastSearchValues] = React.useState<FilterBarValue | null>(null);
 
-  // Arrival options depend on departure
-  const arrivalOptions = React.useMemo(() => {
-    if (!departure) return [];
-    const validArrivals = validRoutes
-      .filter(r => r.departure === departure.label)
-      .map(r => ({ label: r.arrival, code: r.trainType, color: r.arrivalColor }));
-    return Array.from(new Set(validArrivals.map(a => a.label)))
-      .map(label => validArrivals.find(a => a.label === label)!);
-  }, [departure]);
+  // Function to check if current values are different from last search
+  const hasValuesChanged = React.useCallback(() => {
+    if (!lastSearchValues) return true;
 
-  // Train type options depend on departure and arrival
-  const availableTrainTypes = React.useMemo(() => {
-    if (!departure || !arrival) return [];
-    const matchingRoutes = validRoutes.filter(r => 
-      r.departure === departure.label && r.arrival === arrival.label
+    return (
+      departure?.label !== lastSearchValues.departure?.label ||
+      arrival?.label !== lastSearchValues.arrival?.label ||
+      trainType?.code !== lastSearchValues.trainType?.code ||
+      date?.format('YYYY-MM-DD') !== lastSearchValues.date?.format('YYYY-MM-DD')
     );
-    const validTypes = [...new Set(matchingRoutes.map(r => r.trainType))];
+  }, [departure, arrival, trainType, date, lastSearchValues]);
+
+  // Handle search click
+  const handleSearch = () => {
+    if (hasValuesChanged()) {
+      setLastSearchValues(value);
+      onSearch();
+    }
+  };
+
+  // Get all valid routes based on current selections
+  const getValidRoutes = React.useCallback(() => {
+    let filteredRoutes = validRoutes;
+
+    if (departure) {
+      filteredRoutes = filteredRoutes.filter(r => r.departure === departure.label);
+    }
+    if (arrival) {
+      filteredRoutes = filteredRoutes.filter(r => r.arrival === arrival.label);
+    }
+    if (trainType) {
+      filteredRoutes = filteredRoutes.filter(r => r.trainType === trainType.code);
+    }
+
+    return filteredRoutes;
+  }, [departure, arrival, trainType]);
+
+  // Departure options based on current selections
+  const departureOptions = React.useMemo(() => {
+    const filteredRoutes = getValidRoutes();
+    const allDepartures = filteredRoutes.map(r => ({
+      label: r.departure,
+      code: r.trainType,
+      color: r.departureColor
+    }));
+    return Array.from(new Set(allDepartures.map(d => d.label)))
+      .map(label => allDepartures.find(d => d.label === label)!);
+  }, [getValidRoutes]);
+
+  // Arrival options based on current selections
+  const arrivalOptions = React.useMemo(() => {
+    const filteredRoutes = getValidRoutes();
+    const allArrivals = filteredRoutes.map(r => ({
+      label: r.arrival,
+      code: r.trainType,
+      color: r.arrivalColor
+    }));
+    return Array.from(new Set(allArrivals.map(a => a.label)))
+      .map(label => allArrivals.find(a => a.label === label)!);
+  }, [getValidRoutes]);
+
+  // Train type options based on current selections
+  const availableTrainTypes = React.useMemo(() => {
+    const filteredRoutes = getValidRoutes();
+    const validTypes = [...new Set(filteredRoutes.map(r => r.trainType))];
     return trainTypeOptions.filter(type => validTypes.includes(type.code));
-  }, [departure, arrival]);
+  }, [getValidRoutes]);
 
-  // Reset arrival and trainType if departure changes
-  React.useEffect(() => {
-    onChange({ ...value, arrival: null, trainType: null });
-    // eslint-disable-next-line
-  }, [departure?.label]);
+  // Handle departure change
+  const handleDepartureChange = (newDeparture: typeof departureOptions[0] | null) => {
+    const filteredRoutes = newDeparture
+      ? validRoutes.filter(r => r.departure === newDeparture.label)
+      : validRoutes;
 
-  // Reset trainType if arrival changes
-  React.useEffect(() => {
-    onChange({ ...value, trainType: null });
-    // eslint-disable-next-line
-  }, [arrival?.label]);
+    // Find valid arrival and train type for the new departure
+    const validArrival = arrival && filteredRoutes.some(r => r.arrival === arrival.label)
+      ? arrival
+      : null;
+
+    const validTrainType = trainType && filteredRoutes.some(r => r.trainType === trainType.code)
+      ? trainType
+      : null;
+
+    onChange({
+      ...value,
+      departure: newDeparture,
+      arrival: validArrival,
+      trainType: validTrainType
+    });
+  };
+
+  // Handle arrival change
+  const handleArrivalChange = (newArrival: typeof arrivalOptions[0] | null) => {
+    const filteredRoutes = newArrival
+      ? validRoutes.filter(r => r.arrival === newArrival.label)
+      : validRoutes;
+
+    // Find valid departure and train type for the new arrival
+    const validDeparture = departure && filteredRoutes.some(r => r.departure === departure.label)
+      ? departure
+      : null;
+
+    const validTrainType = trainType && filteredRoutes.some(r => r.trainType === trainType.code)
+      ? trainType
+      : null;
+
+    onChange({
+      ...value,
+      departure: validDeparture,
+      arrival: newArrival,
+      trainType: validTrainType
+    });
+  };
+
+  // Handle train type change
+  const handleTrainTypeChange = (newTrainType: typeof trainTypeOptions[0] | null) => {
+    const filteredRoutes = newTrainType
+      ? validRoutes.filter(r => r.trainType === newTrainType.code)
+      : validRoutes;
+
+    // Find valid departure and arrival for the new train type
+    const validDeparture = departure && filteredRoutes.some(r => r.departure === departure.label)
+      ? departure
+      : null;
+
+    const validArrival = arrival && filteredRoutes.some(r => r.arrival === arrival.label)
+      ? arrival
+      : null;
+
+    onChange({
+      ...value,
+      departure: validDeparture,
+      arrival: validArrival,
+      trainType: newTrainType
+    });
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <AppBar 
-        position="fixed" 
+      <AppBar
+        position="fixed"
         elevation={0}
         sx={{
           backgroundColor: '#11161B',
@@ -173,12 +182,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
           zIndex: 1100,
           px: 5,
           pt: 2,
-          pb:1,
+          pb: 1,
           borderTop: '1.5px solid #3B4A59',
           borderBottom: '1.5px solid #3B4A59',
         }}
       >
-        <Toolbar sx={{ 
+        <Toolbar sx={{
           minHeight: '85px !important',
           px: { xs: 2, md: 4 },
           display: 'flex',
@@ -190,7 +199,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
             <Autocomplete
               options={departureOptions}
               value={departure}
-              onChange={(_, newValue) => onChange({ ...value, departure: newValue })}
+              onChange={(_, newValue) => handleDepartureChange(newValue)}
               getOptionLabel={(option) => option.label}
               renderInput={(params) => (
                 <TextField
@@ -214,7 +223,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
             <Autocomplete
               options={arrivalOptions}
               value={arrival}
-              onChange={(_, newValue) => onChange({ ...value, arrival: newValue })}
+              onChange={(_, newValue) => handleArrivalChange(newValue)}
               getOptionLabel={(option) => option.label}
               renderInput={(params) => (
                 <TextField
@@ -237,7 +246,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
             <Autocomplete
               options={availableTrainTypes}
               value={trainType}
-              onChange={(_, newValue) => onChange({ ...value, trainType: newValue })}
+              onChange={(_, newValue) => handleTrainTypeChange(newValue)}
               getOptionLabel={(option) => option.label}
               renderInput={(params) => (
                 <TextField
@@ -277,21 +286,65 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
               }}
             />
             {/* Date Picker */}
-            <DatePicker 
-              label="Pick a date" 
-              value={date} 
+            <DatePicker
+              label="Pick a date"
+              value={date}
               format="DD/MM/YYYY"
-              onChange={newValue => onChange({ ...value, date: newValue })} 
+              onChange={newValue => onChange({ ...value, date: newValue })}
               slotProps={{ textField: { sx: { minWidth: 300 } } }}
+              disableFuture
+              minDate={dayjs('2025-05-18')}
             />
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ minWidth: 50, height: 50, fontWeight: 700, fontSize: 18, p: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              onClick={onSearch}
-            >
-              <SearchIcon fontSize="large" />
-            </Button>
+            <Tooltip title="Search for trains" placement="top">
+
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{
+                  minWidth: 50,
+                  height: 50,
+                  fontWeight: 700,
+                  fontSize: 18,
+                  p: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onClick={handleSearch}
+              >
+                <SearchIcon fontSize="large" />
+              </Button>
+            </Tooltip>
+            <Tooltip title="Reset filters" placement="top">
+
+              <Button
+                variant="outlined"
+                color="primary"
+                sx={{
+                  minWidth: 50,
+                  height: 50,
+                  fontWeight: 700,
+                  fontSize: 18,
+                  p: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  '&:hover': {
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                  }
+                }}
+                onClick={() => onChange({
+                  departure: null,
+                  arrival: null,
+                  trainType: null,
+                  date: null
+                })}
+              >
+                <RestartAltIcon fontSize="large" />
+              </Button>
+            </Tooltip>
           </Paper>
         </Toolbar>
       </AppBar>
@@ -299,4 +352,4 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
   );
 };
 
-export default FilterBar; 
+export default FilterBar;
