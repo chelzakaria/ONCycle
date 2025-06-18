@@ -77,6 +77,16 @@ const Status: React.FC = () => {
       setTrips([]); // Clear trips if no filters are selected
       return;
     }
+    // prevent search if not all filters are selected
+    if (!filter.departure || !filter.arrival || !filter.trainType || !filter.date) {
+      setTrips([]); // Clear trips if not all filters are selected
+      setShowAlert(true);
+      // Auto hide after 3 seconds
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 1500);
+      return;
+    }
 
     let query = supabase.from('trips').select('*').order('theorical_departure_time', { ascending: true });
     if (filter.departure) query = query.eq('initial_departure_station', filter.departure.label);
@@ -251,6 +261,24 @@ const Status: React.FC = () => {
               Trains fetched successfully
             </Alert>
           </Slide>
+          {/* Alert for missing filters */}
+          <Slide direction="up" in={showAlert && trips.length === 0} mountOnEnter unmountOnExit>
+            <Alert
+              severity="warning"
+              sx={{
+                position: 'absolute',
+                bottom: '5%',
+                left: '40%',
+                transform: 'translateX(-50%)',
+                zIndex: 5,
+                width: 'auto',
+                minWidth: '250px',
+                fontSize: 15,
+              }}
+            >
+              Please select all filters to search for trains
+            </Alert>
+          </Slide>
           {/* Columns background with integrated timeline */}
           <div style={{
             position: 'absolute',
@@ -362,8 +390,10 @@ const Status: React.FC = () => {
                         height: TRAIN_HEIGHT,
                         width: `${COLUMN_WIDTH_PERCENT}%`,
                         objectFit: 'contain',
+                        cursor: 'pointer',
                       }}
                       onClick={() => handleTrainClick(trainId)}
+
                     />
                   ))}
                   <img
@@ -373,6 +403,7 @@ const Status: React.FC = () => {
                       height: TRAIN_HEIGHT,
                       width: `${COLUMN_WIDTH_PERCENT}%`,
                       objectFit: 'contain',
+                      cursor: 'pointer',
                     }}
                     onClick={() => handleTrainClick(trainId)}
                   />
@@ -471,7 +502,7 @@ const Status: React.FC = () => {
                               {/* Arrival chip */}
                               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 {trip.theorical_arrival_time && (
-                                  <Tooltip title={trip.arrival_delay > 0 ? `Delay: ${trip.arrival_delay} min` : ''} arrow disableHoverListener={!(trip.arrival_delay > 0)}>
+                                  <Tooltip title={`Delay: ${trip.arrival_delay > 59 ? Math.floor(trip.arrival_delay / 60) + 'h ' + (trip.arrival_delay % 60) + 'm' : trip.arrival_delay + ' min'}`} arrow >
                                     <Box sx={{ display: 'flex', px: 1.5, py: 0.5, borderRadius: 2, border: `2px solid ${getDelayColor(trip.arrival_delay || 0)}`, background: getDelayBg(trip.arrival_delay || 0), alignItems: 'center', cursor: 'pointer' }}>
                                       <span style={{ fontWeight: 700, marginRight: 4, fontSize: 13 }}>Arrival:</span>
                                       <span style={{ color: getDelayColor(trip.arrival_delay || 0), fontWeight: 700, fontSize: 13 }}>
@@ -484,8 +515,8 @@ const Status: React.FC = () => {
                               {/* Departure chip */}
                               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                 {trip.theorical_departure_time && (
-                                  <Tooltip title={trip.departure_delay > 0 ? `Delay: ${trip.departure_delay} min` : ''} arrow disableHoverListener={!(trip.departure_delay > 0)}>
-                                    <Box sx={{ display: 'flex', px: 1.5, py: 0.5, borderRadius: 2, border: `2px solid ${getDelayColor(trip.departure_delay || 0)}`, background: getDelayBg(trip.departure_delay || 0), alignItems: 'center', cursor: trip.departure_delay > 0 ? 'pointer' : 'default' }}>
+                                  <Tooltip title={`Delay: ${trip.departure_delay > 59 ? Math.floor(trip.departure_delay / 60) + 'h ' + (trip.departure_delay % 60) + 'm' : trip.departure_delay + ' min'}`} arrow >
+                                    <Box sx={{ display: 'flex', px: 1.5, py: 0.5, borderRadius: 2, border: `2px solid ${getDelayColor(trip.departure_delay || 0)}`, background: getDelayBg(trip.departure_delay || 0), alignItems: 'center', cursor: 'pointer' }} >
                                       <span style={{ fontWeight: 700, marginRight: 4, fontSize: 13 }}>Departure:</span>
                                       <span style={{ color: getDelayColor(trip.departure_delay || 0), fontWeight: 700, fontSize: 13 }}>
                                         {formatTimeHHMM(trip.theorical_departure_time)}
@@ -540,7 +571,7 @@ const Status: React.FC = () => {
           )}
         </div>
       </div>
-    </LocalizationProvider>
+    </LocalizationProvider >
   );
 };
 
