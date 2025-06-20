@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -11,9 +15,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -22,6 +28,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -91,7 +98,9 @@
 }
 
 /* Page Container Styles */
-body, html, #root {
+body,
+html,
+#root {
   margin: 0;
   padding: 0;
   width: 100vw;
@@ -100,7 +109,8 @@ body, html, #root {
 
 .page-container {
   position: fixed;
-  top: 160px; /* 75px (navbar) + 85px (filter bar) */
+  top: 160px;
+  /* 75px (navbar) + 85px (filter bar) */
   left: 0;
   right: 0;
   width: 100vw;

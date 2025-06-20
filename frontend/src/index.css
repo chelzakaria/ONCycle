@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --clr-dark-a0: #000000;
   --clr-light-a0: #ffffff;

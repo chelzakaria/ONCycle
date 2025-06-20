@@ -4,6 +4,7 @@ import Status from './pages/Status';
 import Statistics from './pages/Statistics';
 import Forecast from './pages/Forecast';
 import './App.css';
+import './index.css';
 // import Trips from './trips';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
