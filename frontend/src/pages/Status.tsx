@@ -46,6 +46,7 @@ const Status: React.FC = () => {
   const [showAlert, setShowAlert] = React.useState(false);
   const [selectedTrain, setSelectedTrain] = React.useState<any[]>([]);
   const [openDialog, setOpenDialog] = React.useState(false);
+  const [noDataFound, setNoDataFound] = React.useState(false);
 
   // Calculate the starting hour based on the first train's departure time
   const getTimelineStartHour = React.useMemo(() => {
@@ -75,12 +76,15 @@ const Status: React.FC = () => {
     // Check if any filter is selected
     if (!filter.departure && !filter.arrival && !filter.trainType && !filter.date) {
       setTrips([]); // Clear trips if no filters are selected
+      setNoDataFound(false);
       return;
     }
     // prevent search if not all filters are selected
     if (!filter.departure || !filter.arrival || !filter.trainType || !filter.date) {
+      console.log('the selected filters : ', filter);
       setTrips([]); // Clear trips if not all filters are selected
       setShowAlert(true);
+      setNoDataFound(false);
       // Auto hide after 3 seconds
       setTimeout(() => {
         setShowAlert(false);
@@ -98,11 +102,15 @@ const Status: React.FC = () => {
       console.error('Error fetching trips:', error.message);
     } else {
       console.log('Fetched trips:', data);
+      console.log('Filter used:', filter);
       setTrips(data || []);
       setShowAlert(true);
+      // If all filters are set and no data is found
+      setNoDataFound((data || []).length === 0);
       // Auto hide after 3 seconds
       setTimeout(() => {
         setShowAlert(false);
+        setNoDataFound(false);
       }, 1500);
     }
     setCurrentPage(0); // Reset to first page on new search
@@ -262,7 +270,7 @@ const Status: React.FC = () => {
             </Alert>
           </Slide>
           {/* Alert for missing filters */}
-          <Slide direction="up" in={showAlert && trips.length === 0} mountOnEnter unmountOnExit>
+          <Slide direction="up" in={showAlert && trips.length === 0 && !noDataFound} mountOnEnter unmountOnExit>
             <Alert
               severity="warning"
               sx={{
@@ -277,6 +285,24 @@ const Status: React.FC = () => {
               }}
             >
               Please select all filters to search for trains
+            </Alert>
+          </Slide>
+          {/* Alert for no data found */}
+          <Slide direction="up" in={showAlert && noDataFound} mountOnEnter unmountOnExit>
+            <Alert
+              severity="info"
+              sx={{
+                position: 'absolute',
+                bottom: '5%',
+                left: '40%',
+                transform: 'translateX(-50%)',
+                zIndex: 5,
+                width: 'auto',
+                minWidth: '250px',
+                fontSize: 15,
+              }}
+            >
+              No trains found for the selected filters
             </Alert>
           </Slide>
           {/* Columns background with integrated timeline */}
@@ -425,7 +451,8 @@ const Status: React.FC = () => {
                 color: '#FFFFFF',
                 border: '2px solid #3B4A59',
                 borderRadius: 2,
-                maxWidth: 500
+                maxWidth: 500,
+
               }
             }}
           >
@@ -569,6 +596,34 @@ const Status: React.FC = () => {
               />
             </div>
           )}
+          {/* Legend */}
+          <div className="fixed bottom-0 left-0 w-auto flex gap-4 p-4 z-50">
+            <span className="inline-flex items-center gap-x-1 rounded-tremor-small bg-emerald-100 px-2 py-1 text-tremor-label font-bold text-emerald-800 ring-1 ring-inset ring-emerald-600/10 dark:bg-emerald-400/20 dark:text-emerald-500 dark:ring-emerald-400/20">
+              {/* <RiArrowUpLine className="-ml-0.5 size-4" aria-hidden={true} /> */}
+              Delay under 5 min
+            </span>
+
+            <span className="inline-flex items-center gap-x-1 rounded-tremor-small bg-yellow-100 px-2 py-1 text-tremor-label font-bold text-yellow-800 ring-1 ring-inset ring-yellow-600/10 dark:bg-yellow-400/20 dark:text-yellow-500 dark:ring-yellow-400/20">
+              {/* <RiArrowUpLine className="-ml-0.5 size-4" aria-hidden={true} /> */}
+              Delay under 15 min
+            </span>
+
+            <span className="inline-flex items-center gap-x-1 rounded-tremor-small bg-orange-100 px-2 py-1 text-tremor-label font-bold text-orange-800 ring-1 ring-inset ring-orange-600/10 dark:bg-orange-400/20 dark:text-orange-500 dark:ring-orange-400/20">
+              {/* <RiArrowUpLine className="-ml-0.5 size-4" aria-hidden={true} /> */}
+              Delay under 30 min
+            </span>
+
+            <span className="inline-flex items-center gap-x-1 rounded-tremor-small bg-red-100 px-2 py-1 text-tremor-label font-bold text-red-800 ring-1 ring-inset ring-red-600/10 dark:bg-red-400/20 dark:text-red-500 dark:ring-red-400/20">
+              {/* <RiArrowUpLine className="-ml-0.5 size-4" aria-hidden={true} /> */}
+              Delay over 30 min
+            </span>
+
+          </div>
+
+
+
+
+
         </div>
       </div>
     </LocalizationProvider >
