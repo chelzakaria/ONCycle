@@ -27,9 +27,10 @@ type FilterBarProps = {
   value: FilterBarValue;
   onChange: (value: FilterBarValue) => void;
   onSearch: () => void;
+  onReset?: () => void;
 };
 
-const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
+const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onReset }) => {
   const { departure, arrival, trainType, date } = value;
   const [lastSearchValues, setLastSearchValues] = React.useState<FilterBarValue | null>(null);
 
@@ -344,29 +345,30 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
                     date: null
                   });
                   setLastSearchValues(null);
-                  // Optionally, you can call a prop like onReset if you want to clear trains in parent
-                  // If removing trains is handled by onChange, this is enough.
+                  if (typeof onReset === 'function') onReset(); // <-- Add this line
                 }}
               >
                 <RestartAltIcon fontSize="large" />
               </Button>
             </Tooltip>
             {/* Current search values display */}
-            {lastSearchValues && (
-              <Tooltip title="Current search values" placement="top">
-                <span className="inline-flex flex-col items-center  rounded-tremor-small bg-blue-100 px-3 py-2 text-tremor-label font-bold text-blue-800 ring-1 ring-inset ring-blue-600/10 dark:bg-blue-400/20 dark:text-blue-500 dark:ring-blue-400/20" style={{ fontSize: '0.8rem' }}>
-                  <span className="flex items-center gap-x-2" >
-                    {lastSearchValues.departure?.label || 'Any'} <ArrowForwardIcon sx={{ fontSize: 20 }} /> {lastSearchValues.arrival?.label || 'Any'}
+            {lastSearchValues &&
+              lastSearchValues.departure &&
+              lastSearchValues.arrival &&
+              lastSearchValues.trainType &&
+              lastSearchValues.date && (
+                <Tooltip title="Current search values" placement="top">
+                  <span className="inline-flex flex-col items-center  rounded-tremor-small bg-blue-100 px-3 py-2 text-tremor-label font-bold text-blue-800 ring-1 ring-inset ring-blue-600/10 dark:bg-blue-400/20 dark:text-blue-500 dark:ring-blue-400/20" style={{ fontSize: '0.8rem' }}>
+                    <span className="flex items-center gap-x-2" >
+                      {lastSearchValues.departure.label} <ArrowForwardIcon sx={{ fontSize: 20 }} /> {lastSearchValues.arrival.label}
+                    </span>
+                    <span>
+                      {lastSearchValues.date.format('dddd, MMMM DD, YYYY')}
+                    </span>
                   </span>
-                  <span>
-                    {lastSearchValues.date ? lastSearchValues.date.format('dddd, MMMM DD, YYYY') : 'Any'}
-                  </span>
+                </Tooltip>
+              )}
 
-
-                </span>
-              </Tooltip>
-
-            )}
           </Paper>
         </Toolbar>
       </AppBar>

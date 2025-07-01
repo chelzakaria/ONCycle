@@ -229,7 +229,16 @@ const Status: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <FilterBar value={filter} onChange={setFilter} onSearch={handleSearch} />
+      <FilterBar value={filter}
+        onChange={setFilter}
+        onSearch={handleSearch}
+        onReset={() => {
+          setFilter(initialFilter);
+          setTrips([]);
+          setNoDataFound(false);
+          setShowAlert(false);
+          setCurrentPage(0);
+        }} />
       <div className="page-container" style={{
         position: 'relative',
         padding: 0,
@@ -480,7 +489,7 @@ const Status: React.FC = () => {
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <DialogContent sx={{ mt: 1, minHeight: 400, fontFamily: 'Urbanist, sans-serif', position: 'relative' }}>
+            <DialogContent sx={{ mt: 1, minHeight: 200, fontFamily: 'Urbanist, sans-serif', position: 'relative' }}>
               <div style={{ position: 'relative' }}>
                 {/* Vertical dotted line */}
                 {selectedTrain.length > 1 && (
