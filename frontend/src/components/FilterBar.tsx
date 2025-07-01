@@ -4,6 +4,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import TrainIcon from '@mui/icons-material/Train';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { Dayjs } from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -194,7 +195,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
           gap: 4,
           justifyContent: 'flex-start',
         }}>
-          <Paper elevation={0} sx={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', boxShadow: 'none', p: 1, width: '100%', justifyContent: 'center' }}>
+          <Paper elevation={0} sx={{ display: 'flex', alignItems: 'center', gap: 2, background: 'transparent', boxShadow: 'none', p: 0, width: '100%', justifyContent: 'center' }}>
             {/* Departure Station */}
             <Autocomplete
               options={departureOptions}
@@ -205,7 +206,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
                 <TextField
                   {...params}
                   label="Departure Station"
-                  sx={{ minWidth: 300 }}
+                  sx={{ minWidth: 280 }}
                 />
               )}
               renderOption={(props, option) => {
@@ -229,7 +230,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
                 <TextField
                   {...params}
                   label="Arrival Station"
-                  sx={{ minWidth: 300 }}
+                  sx={{ minWidth: 280 }}
                 />
               )}
               renderOption={(props, option) => {
@@ -252,7 +253,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
                 <TextField
                   {...params}
                   label="Train Type"
-                  sx={{ minWidth: 300 }}
+                  sx={{ minWidth: 280 }}
                   InputProps={{
                     ...params.InputProps,
                     endAdornment: trainType ? (
@@ -291,7 +292,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
               value={date}
               format="DD/MM/YYYY"
               onChange={newValue => onChange({ ...value, date: newValue })}
-              slotProps={{ textField: { sx: { minWidth: 300 } } }}
+              slotProps={{ textField: { sx: { minWidth: 280 } } }}
               disableFuture
               minDate={dayjs('2025-05-18')}
             />
@@ -335,20 +336,41 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch }) => {
                     backgroundColor: 'rgba(255, 255, 255, 0.05)'
                   }
                 }}
-                onClick={() => onChange({
-                  departure: null,
-                  arrival: null,
-                  trainType: null,
-                  date: null
-                })}
+                onClick={() => {
+                  onChange({
+                    departure: null,
+                    arrival: null,
+                    trainType: null,
+                    date: null
+                  });
+                  setLastSearchValues(null);
+                  // Optionally, you can call a prop like onReset if you want to clear trains in parent
+                  // If removing trains is handled by onChange, this is enough.
+                }}
               >
                 <RestartAltIcon fontSize="large" />
               </Button>
             </Tooltip>
+            {/* Current search values display */}
+            {lastSearchValues && (
+              <Tooltip title="Current search values" placement="top">
+                <span className="inline-flex flex-col items-center  rounded-tremor-small bg-blue-100 px-3 py-2 text-tremor-label font-bold text-blue-800 ring-1 ring-inset ring-blue-600/10 dark:bg-blue-400/20 dark:text-blue-500 dark:ring-blue-400/20" style={{ fontSize: '0.8rem' }}>
+                  <span className="flex items-center gap-x-2" >
+                    {lastSearchValues.departure?.label || 'Any'} <ArrowForwardIcon sx={{ fontSize: 20 }} /> {lastSearchValues.arrival?.label || 'Any'}
+                  </span>
+                  <span>
+                    {lastSearchValues.date ? lastSearchValues.date.format('dddd, MMMM DD, YYYY') : 'Any'}
+                  </span>
+
+
+                </span>
+              </Tooltip>
+
+            )}
           </Paper>
         </Toolbar>
       </AppBar>
-    </LocalizationProvider>
+    </LocalizationProvider >
   );
 };
 
