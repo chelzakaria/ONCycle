@@ -1,15 +1,14 @@
-// Tremor Date Picker [v2.0.0]
+// Tremor Date Picker [v1.0.5]
 
 "use client"
 
-import * as React from "react"
 import { Time } from "@internationalized/date"
 import * as PopoverPrimitives from "@radix-ui/react-popover"
 import {
-    useDateSegment,
-    useTimeField,
     type AriaTimeFieldProps,
     type TimeValue,
+    useDateSegment,
+    useTimeField,
 } from "@react-aria/datepicker"
 import {
     useTimeFieldState,
@@ -19,6 +18,7 @@ import {
 import { RiCalendar2Fill, RiSubtractFill } from "@remixicon/react"
 import { format, type Locale } from "date-fns"
 import { enUS } from "date-fns/locale"
+import * as React from "react"
 import { tv, type VariantProps } from "tailwind-variants"
 
 import { cx, focusInput, focusRing, hasErrorInput } from "../../lib/utils"
@@ -47,16 +47,13 @@ type TimeSegmentProps = {
 
 const TimeSegment = ({ segment, state }: TimeSegmentProps) => {
     const ref = React.useRef<HTMLDivElement>(null)
+
     const { segmentProps } = useDateSegment(segment, state, ref)
 
-    // Skip rendering for any non-editable segments except colon
-    if (
-        !segment.isEditable &&
-        segment.type === "literal" &&
-        segment.text !== ":"
-    ) {
-        return null
-    }
+    const isColon = segment.type === "literal" && segment.text === ":"
+    const isSpace = segment.type === "literal" && segment.text === " "
+
+    const isDecorator = isColon || isSpace
 
     return (
         <div
@@ -64,7 +61,7 @@ const TimeSegment = ({ segment, state }: TimeSegmentProps) => {
             ref={ref}
             className={cx(
                 // base
-                "relative block w-full appearance-none rounded-md border px-2.5 py-1.5 text-left uppercase tabular-nums shadow-xs outline-hidden transition sm:text-sm",
+                "relative block w-full appearance-none rounded-md border px-2.5 py-1.5 text-left uppercase tabular-nums shadow-sm outline-none transition sm:text-sm",
                 // border color
                 "border-gray-300 dark:border-gray-800",
                 // text color
@@ -74,16 +71,30 @@ const TimeSegment = ({ segment, state }: TimeSegmentProps) => {
                 // focus
                 focusInput,
                 // invalid (optional)
-                "group-aria-invalid/time-input:border-red-500 group-aria-invalid/time-input:ring-2 group-aria-invalid/time-input:ring-red-200 invalid:border-red-500 invalid:ring-2 invalid:ring-red-200 dark:group-aria-invalid/time-input:ring-red-400/20",
+                "invalid:border-red-500 invalid:ring-2 invalid:ring-red-200 group-aria-[invalid=true]/time-input:border-red-500 group-aria-[invalid=true]/time-input:ring-2 group-aria-[invalid=true]/time-input:ring-red-200 group-aria-[invalid=true]/time-input:dark:ring-red-400/20",
                 {
-                    "w-fit! border-none bg-transparent px-0 text-gray-400 shadow-none":
-                        segment.type === "literal",
+                    "!w-fit border-none bg-transparent px-0 text-gray-400 shadow-none":
+                        isDecorator,
+                    hidden: isSpace,
                     "border-gray-300 bg-gray-100 text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500":
-                        state.isDisabled && segment.text !== ":",
+                        state.isDisabled,
+                    "!bg-transparent !text-gray-400": !segment.isEditable,
                 },
             )}
         >
-            {segment.isPlaceholder ? segment.placeholder : segment.text}
+            <span
+                aria-hidden="true"
+                className={cx(
+                    "pointer-events-none block w-full text-left text-gray-700 sm:text-sm",
+                    {
+                        hidden: !segment.isPlaceholder,
+                        "h-0": !segment.isPlaceholder,
+                    },
+                )}
+            >
+                {segment.placeholder}
+            </span>
+            {segment.isPlaceholder ? " " : segment.text}
         </div>
     )
 }
@@ -143,7 +154,7 @@ TimeInput.displayName = "TimeInput"
 const triggerStyles = tv({
     base: [
         // base
-        "peer flex w-full cursor-pointer appearance-none items-center gap-x-2 truncate rounded-md border px-3 py-2 shadow-xs outline-hidden transition-all sm:text-sm",
+        "peer flex w-full cursor-pointer appearance-none items-center gap-x-2 truncate rounded-md border px-3 py-2 shadow-sm outline-none transition-all sm:text-sm",
         // background color
         "bg-white dark:bg-gray-950",
         // border color
@@ -153,15 +164,15 @@ const triggerStyles = tv({
         // placeholder color
         "placeholder-gray-400 dark:placeholder-gray-500",
         // hover
-        "hover:bg-gray-50 dark:hover:bg-gray-950/50",
+        "hover:bg-gray-50 hover:dark:bg-gray-950/50",
         // disabled
         "disabled:pointer-events-none",
         "disabled:bg-gray-100 disabled:text-gray-400",
-        "dark:disabled:border-gray-800 dark:disabled:bg-gray-800 dark:disabled:text-gray-500",
+        "disabled:dark:border-gray-800 disabled:dark:bg-gray-800 disabled:dark:text-gray-500",
         // focus
         focusInput,
         // invalid (optional)
-        // "dark:aria-invalid:ring-red-400/20 aria-invalid:ring-2 aria-invalid:ring-red-200 aria-invalid:border-red-500 invalid:ring-2 invalid:ring-red-200 invalid:border-red-500"
+        // "aria-[invalid=true]:dark:ring-red-400/20 aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-red-200 aria-[invalid=true]:border-red-500 invalid:ring-2 invalid:ring-red-200 invalid:border-red-500"
     ],
     variants: {
         hasError: {
@@ -189,7 +200,7 @@ const Trigger = React.forwardRef<HTMLButtonElement, TriggerProps>(
                     {...props}
                 >
                     <RiCalendar2Fill className="size-5 shrink-0 text-gray-400 dark:text-gray-600" />
-                    <span className="flex-1 overflow-hidden text-left text-ellipsis whitespace-nowrap text-gray-900 dark:text-gray-50">
+                    <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left text-gray-900 dark:text-gray-50">
                         {children ? (
                             children
                         ) : placeholder ? (
@@ -226,7 +237,7 @@ const CalendarPopover = React.forwardRef<
                     // base
                     "relative z-50 w-fit rounded-md border text-sm shadow-xl shadow-black/[2.5%]",
                     // widths
-                    "max-w-[95vw] min-w-[calc(var(--radix-select-trigger-width)-2px)]",
+                    "min-w-[calc(var(--radix-select-trigger-width)-2px)] max-w-[95vw]",
                     // border color
                     "border-gray-200 dark:border-gray-800",
                     // background color
@@ -234,7 +245,7 @@ const CalendarPopover = React.forwardRef<
                     // transition
                     "will-change-[transform,opacity]",
                     "data-[state=closed]:animate-hide",
-                    "data-[state=open]:data-[side=bottom]:animate-slide-down-and-fade data-[state=open]:data-[side=left]:animate-slide-left-and-fade data-[state=open]:data-[side=right]:animate-slide-right-and-fade data-[state=open]:data-[side=top]:animate-slide-up-and-fade",
+                    "data-[state=open]:data-[side=bottom]:animate-slideDownAndFade data-[state=open]:data-[side=left]:animate-slideLeftAndFade data-[state=open]:data-[side=right]:animate-slideRightAndFade data-[state=open]:data-[side=top]:animate-slideUpAndFade",
                     className,
                 )}
                 {...props}
@@ -281,11 +292,9 @@ const PresetContainer = <TPreset extends Preset, TValue>({
     // Currently selected preset
     currentValue,
 }: PresetContainerProps<TPreset, TValue>) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isDateRangePresets = (preset: any): preset is DateRangePreset => {
         return "dateRange" in preset
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isDatePresets = (preset: any): preset is DatePreset => {
         return "date" in preset
     }
@@ -341,8 +350,7 @@ const PresetContainer = <TPreset extends Preset, TValue>({
             const value = currentValue as DateRange | undefined
 
             return value && compareRanges(value, preset.dateRange)
-        }
-        if (isDatePresets(preset)) {
+        } else if (isDatePresets(preset)) {
             const value = currentValue as Date | undefined
 
             return value && compareDates(value, preset.date)
@@ -353,15 +361,14 @@ const PresetContainer = <TPreset extends Preset, TValue>({
 
     return (
         <ul className="flex items-start gap-x-2 sm:flex-col">
-            {presets.map((preset) => {
+            {presets.map((preset, index) => {
                 return (
-                    <li key={`preset-${preset.label}`} className="sm:w-full sm:py-px">
+                    <li key={index} className="sm:w-full sm:py-px">
                         <button
-                            type="button"
                             title={preset.label}
                             className={cx(
                                 // base
-                                "relative w-full overflow-hidden rounded-sm border px-2.5 py-1.5 text-left text-base text-ellipsis whitespace-nowrap shadow-xs outline-hidden transition-all sm:border-none sm:py-2 sm:text-sm sm:shadow-none",
+                                "relative w-full overflow-hidden text-ellipsis whitespace-nowrap rounded border px-2.5 py-1.5 text-left text-base shadow-sm outline-none transition-all sm:border-none sm:py-2 sm:text-sm sm:shadow-none",
                                 // text color
                                 "text-gray-700 dark:text-gray-300",
                                 // border color
@@ -369,8 +376,8 @@ const PresetContainer = <TPreset extends Preset, TValue>({
                                 // focus
                                 focusRing,
                                 // background color
-                                "focus-visible:bg-gray-100 dark:focus-visible:bg-gray-900",
-                                "hover:bg-gray-100 dark:hover:bg-gray-900",
+                                "focus-visible:bg-gray-100 focus-visible:dark:bg-gray-900",
+                                "hover:bg-gray-100 hover:dark:bg-gray-900",
                                 {
                                     "bg-gray-100 dark:bg-gray-900": matchesCurrent(preset),
                                 },
@@ -617,7 +624,7 @@ const SingleDatePicker = ({
                             <div
                                 className={cx(
                                     "relative flex h-14 w-full items-center sm:h-full sm:w-40",
-                                    "border-b border-gray-200 sm:border-r sm:border-b-0 dark:border-gray-800",
+                                    "border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-800",
                                     "overflow-auto",
                                 )}
                             >
@@ -918,7 +925,7 @@ const RangeDatePicker = ({
                             <div
                                 className={cx(
                                     "relative flex h-16 w-full items-center sm:h-full sm:w-40",
-                                    "border-b border-gray-200 sm:border-r sm:border-b-0 dark:border-gray-800",
+                                    "border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-800",
                                     "overflow-auto",
                                 )}
                             >
@@ -980,7 +987,7 @@ const RangeDatePicker = ({
                                 </div>
                             )}
                             <div className="border-t border-gray-200 p-3 sm:flex sm:items-center sm:justify-between dark:border-gray-800">
-                                <p className="text-gray-900 tabular-nums dark:text-gray-50">
+                                <p className="tabular-nums text-gray-900 dark:text-gray-50">
                                     <span className="text-gray-700 dark:text-gray-300">
                                         {translations?.range ?? "Range"}:
                                     </span>{" "}
@@ -1026,7 +1033,7 @@ const validatePresets = (
         const fromYearToUse = fromYear
         const toYearToUse = toYear
 
-        for (const preset of presets) {
+        presets.forEach((preset) => {
             if ("date" in preset) {
                 const presetYear = preset.date.getFullYear()
 
@@ -1152,7 +1159,7 @@ const validatePresets = (
                     }
                 }
             }
-        }
+        })
     }
 }
 
@@ -1196,7 +1203,5 @@ DateRangePicker.displayName = "DateRangePicker"
 export {
     DatePicker,
     DateRangePicker,
-    type DatePreset,
-    type DateRangePreset,
-    type DateRange,
+    type DatePreset, type DateRange, type DateRangePreset
 }
