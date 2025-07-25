@@ -18,7 +18,7 @@ function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <Router>
-        <div className="App">
+        <div className="App" style={{ backgroundColor: '#11161B' }}>
           <Navbar />
           <Routes>
             <Route path="/" element={<Status />} />
