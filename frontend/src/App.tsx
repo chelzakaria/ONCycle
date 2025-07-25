@@ -3,6 +3,8 @@ import Navbar from './components/Navbar';
 import Status from './pages/Status';
 import Statistics from './pages/Statistics';
 import Forecast from './pages/Forecast';
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import './App.css';
 import './index.css';
 // import Trips from './trips';
@@ -27,6 +29,8 @@ function App() {
             <Route path="/forecast" element={<Forecast />} />
           </Routes>
         </div>
+        <Analytics />
+        <SpeedInsights />
       </Router>
     </ThemeProvider>
   );
