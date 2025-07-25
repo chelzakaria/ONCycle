@@ -15,7 +15,7 @@ interface Trip {
   train_type: string;
   sequence: number;
   arrival_delay: number | null;
-  theorical_arrival_time?: string;
+  scheduled_arrival_time?: string;
   created_at?: string;
   start_station?: string;
   end_station?: string;
@@ -295,7 +295,7 @@ const Statistics: React.FC = () => {
           <div className="mt-4">
             <TabGroup defaultIndex={0}>
               <TabList className="flex justify-center gap-2 border-b border-gray-700 bg-transparent pb-2">
-                {['Total Delays', 'Average Delay', 'Delay Count'].map((tab) => (
+                {['Total Delays', 'Average Delay', 'Delay Percentage'].map((tab) => (
                   <Tab
                     key={tab}
                     className="px-4 py-2 font-medium text-base rounded-none bg-transparent border-none shadow-none outline-none
@@ -372,6 +372,11 @@ const Statistics: React.FC = () => {
                 ))}
               </TabPanels>
             </TabGroup>
+
+            {/* <div className="mb-0 ml-0 text-sm text-gray-400 dark:text-gray-400">
+              * Only delays greater than or equal to 5 minutes are included in the statistics.
+            </div> */}
+
 
           </div>
         </div>

@@ -53,9 +53,9 @@ const Status: React.FC = () => {
     if (trips.length === 0) return 0;
 
     const firstTrip = trips.find(trip => trip.sequence === 1);
-    if (!firstTrip?.theorical_departure_time) return 0;
+    if (!firstTrip?.scheduled_departure_time) return 0;
 
-    const [hours] = firstTrip.theorical_departure_time.split(':');
+    const [hours] = firstTrip.scheduled_departure_time.split(':');
     return parseInt(hours, 10);
   }, [trips]);
 
@@ -92,7 +92,7 @@ const Status: React.FC = () => {
       return;
     }
 
-    let query = supabase.from('trips').select('*').order('theorical_departure_time', { ascending: true });
+    let query = supabase.from('trips').select('*').order('scheduled_departure_time', { ascending: true });
     if (filter.departure) query = query.eq('initial_departure_station', filter.departure.label);
     if (filter.arrival) query = query.eq('final_arrival_station', filter.arrival.label);
     if (filter.trainType) query = query.eq('train_type', filter.trainType.code);
@@ -134,11 +134,11 @@ const Status: React.FC = () => {
       trip.train_id === trainId && trip.sequence === 1
     );
 
-    if (!firstSequenceTrip?.theorical_departure_time) {
+    if (!firstSequenceTrip?.scheduled_departure_time) {
       return 0;
     }
 
-    const [hours] = firstSequenceTrip.theorical_departure_time.split(':');
+    const [hours] = firstSequenceTrip.scheduled_departure_time.split(':');
     const departureHour = parseInt(hours, 10);
     const column = (departureHour - getTimelineStartHour + 24) % 24;
     return column;
@@ -156,8 +156,8 @@ const Status: React.FC = () => {
       return h * 60 + m;
     };
 
-    let departure = timeToMinutes(firstTrip.theorical_departure_time);
-    let arrival = timeToMinutes(lastTrip.theorical_arrival_time);
+    let departure = timeToMinutes(firstTrip.scheduled_departure_time);
+    let arrival = timeToMinutes(lastTrip.scheduled_arrival_time);
 
     // Handle midnight crossing
     if (arrival < departure) arrival += 24 * 60;
@@ -537,12 +537,12 @@ const Status: React.FC = () => {
                             >
                               {/* Arrival chip */}
                               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                {trip.theorical_arrival_time && (
+                                {trip.actual_arrival_time && (
                                   <Tooltip title={`Delay: ${trip.arrival_delay > 59 ? Math.floor(trip.arrival_delay / 60) + 'h ' + (trip.arrival_delay % 60) + 'm' : trip.arrival_delay + ' min'}`} arrow >
                                     <Box sx={{ display: 'flex', px: 1.5, py: 0.5, borderRadius: 2, border: `2px solid ${getDelayColor(trip.arrival_delay || 0)}`, background: getDelayBg(trip.arrival_delay || 0), alignItems: 'center', cursor: 'pointer' }}>
                                       <span style={{ fontWeight: 700, marginRight: 4, fontSize: 13 }}>Arrival:</span>
                                       <span style={{ color: getDelayColor(trip.arrival_delay || 0), fontWeight: 700, fontSize: 13 }}>
-                                        {formatTimeHHMM(trip.theorical_arrival_time)}
+                                        {formatTimeHHMM(trip.actual_arrival_time)}
                                       </span>
                                     </Box>
                                   </Tooltip>
@@ -550,12 +550,12 @@ const Status: React.FC = () => {
                               </span>
                               {/* Departure chip */}
                               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                {trip.theorical_departure_time && (
+                                {trip.actual_departure_time && (
                                   <Tooltip title={`Delay: ${trip.departure_delay > 59 ? Math.floor(trip.departure_delay / 60) + 'h ' + (trip.departure_delay % 60) + 'm' : trip.departure_delay + ' min'}`} arrow >
                                     <Box sx={{ display: 'flex', px: 1.5, py: 0.5, borderRadius: 2, border: `2px solid ${getDelayColor(trip.departure_delay || 0)}`, background: getDelayBg(trip.departure_delay || 0), alignItems: 'center', cursor: 'pointer' }} >
                                       <span style={{ fontWeight: 700, marginRight: 4, fontSize: 13 }}>Departure:</span>
                                       <span style={{ color: getDelayColor(trip.departure_delay || 0), fontWeight: 700, fontSize: 13 }}>
-                                        {formatTimeHHMM(trip.theorical_departure_time)}
+                                        {formatTimeHHMM(trip.actual_departure_time)}
                                       </span>
                                     </Box>
                                   </Tooltip>
