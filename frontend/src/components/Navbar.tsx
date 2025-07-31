@@ -7,9 +7,22 @@ import Tab from '@mui/material/Tab';
 import { Link, useLocation } from 'react-router-dom';
 
 const navLinks = [
-  { label: 'Status', path: '/status' },
-  { label: 'Statistics', path: '/statistics' },
-  { label: 'Forecast', path: '/forecast' },
+  { 
+    label: (
+      <span className="flex items-center space-x-2">
+        <span
+          className="shrink-0 animate-pulse rounded-tremor-full bg-emerald-500/30 p-1"
+          aria-hidden={true}
+          >
+          <span className="block size-2 rounded-tremor-full bg-emerald-500" />
+        </span>
+          <span>Live Status</span>
+      </span>
+    ), 
+    path: '/status' 
+  },
+  { label: 'Analytics', path: '/analytics' },
+  { label: 'Predictions', path: '/predictions' },
 ];
 
 const Navbar: React.FC = () => {

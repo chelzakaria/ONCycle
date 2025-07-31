@@ -25,8 +25,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Status />} />
             <Route path="/status" element={<Status />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/forecast" element={<Forecast />} />
+            <Route path="/analytics" element={<Statistics />} />
+            <Route path="/predictions" element={<Forecast />} />
           </Routes>
         </div>
         <Analytics />
