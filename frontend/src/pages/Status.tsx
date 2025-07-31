@@ -152,18 +152,20 @@ const Status: React.FC = () => {
     if (!firstTrip || !lastTrip) return 0;
 
     const timeToMinutes = (time: string) => {
-      const [h, m] = time.split(':').map(Number);
-      return h * 60 + m;
+      const [h, _] = time.split(':').map(Number);
+      // return h * 60 + m;
+      return h;
     };
 
     let departure = timeToMinutes(firstTrip.scheduled_departure_time);
     let arrival = timeToMinutes(lastTrip.scheduled_arrival_time);
 
     // Handle midnight crossing
-    if (arrival < departure) arrival += 24 * 60;
+    if (arrival < departure) arrival += 24;
 
-    const totalHours = Math.ceil((arrival - departure) / 60);
-    return Math.max(0, totalHours - 1);
+    // const totalHours = Math.ceil((arrival - departure) / 60);
+    const totalHours = Math.floor(arrival - departure) 
+    return Math.max(0, totalHours);
   };
 
 
