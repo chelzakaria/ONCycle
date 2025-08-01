@@ -316,7 +316,7 @@ const Statistics: React.FC = () => {
                       </div>
                     )}
                     {loading ? (
-                      <div className="  flex items-center justify-center">
+                      <div className="h-80 flex items-center justify-center">
                         <div className="text-tremor-content dark:text-dark-tremor-content">
                           Loading train delay data...
                         </div>
@@ -362,7 +362,7 @@ const Statistics: React.FC = () => {
                         />
                       )
                     ) : (
-                      <div className="h-96 flex items-center justify-center">
+                      <div className="h-80 flex items-center justify-center">
                         <div className="text-tremor-content dark:text-dark-tremor-content">
                           No delay data available for selected date range
                         </div>
