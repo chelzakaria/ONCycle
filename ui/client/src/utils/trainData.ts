@@ -61,4 +61,4 @@ export const validRoutes = [
 export const departureOptions = Array.from(new Set(validRoutes.map(r => r.departure))).map(label => {
   const route = validRoutes.find(r => r.departure === label)!;
   return { label, code: route.trainType, color: route.departureColor };
-}); 
+});

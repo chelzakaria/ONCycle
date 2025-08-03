@@ -199,7 +199,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
           <Paper elevation={0} sx={{ display: 'flex', alignItems: 'center', gap: 2, background: 'transparent', boxShadow: 'none', p: 0, width: '100%', justifyContent: 'center' }}>
             {/* Departure Station */}
             <Autocomplete
-              options={departureOptions}
+              options={departureOptions.sort((a, b) => a.label.localeCompare(b.label))}
               value={departure}
               onChange={(_, newValue) => handleDepartureChange(newValue)}
               getOptionLabel={(option) => option.label}
@@ -223,7 +223,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
 
             {/* Arrival Station */}
             <Autocomplete
-              options={arrivalOptions}
+              options={arrivalOptions.sort((a, b) => a.label.localeCompare(b.label))}
               value={arrival}
               onChange={(_, newValue) => handleArrivalChange(newValue)}
               getOptionLabel={(option) => option.label}
@@ -246,7 +246,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
             />
             {/* Train Type */}
             <Autocomplete
-              options={availableTrainTypes}
+              options={availableTrainTypes.sort((a, b) => a.label.localeCompare(b.label))}
               value={trainType}
               onChange={(_, newValue) => handleTrainTypeChange(newValue)}
               getOptionLabel={(option) => option.label}
