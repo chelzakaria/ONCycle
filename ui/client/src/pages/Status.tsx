@@ -4,7 +4,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Tooltip } from '@mui/material';
 import { Pagination } from '@mui/material';
-import { supabase } from '../dbClient';
+import { fetchTrips, type TripFilters } from '../services/api';
 import Alert from '@mui/material/Alert';
 import carriageGreen from '../assets/carriage-green.svg';
 import carriageYellow from '../assets/carriage-yellow.svg';
@@ -92,15 +92,14 @@ const Status: React.FC = () => {
       return;
     }
 
-    let query = supabase.from('trips').select('*').order('scheduled_departure_time', { ascending: true });
-    if (filter.departure) query = query.eq('initial_departure_station', filter.departure.label);
-    if (filter.arrival) query = query.eq('final_arrival_station', filter.arrival.label);
-    if (filter.trainType) query = query.eq('train_type', filter.trainType.code);
-    if (filter.date) query = query.eq('date', filter.date.format('YYYY-MM-DD'));
-    const { data, error } = await query;
-    if (error) {
-      console.error('Error fetching trips:', error.message);
-    } else {
+    try {
+      const filters: TripFilters = {};
+      if (filter.departure) filters.start_station = filter.departure.label;
+      if (filter.arrival) filters.end_station = filter.arrival.label;
+      if (filter.trainType) filters.train_type = filter.trainType.code;
+      if (filter.date) filters.date = filter.date.format('YYYY-MM-DD');
+
+      const data = await fetchTrips(filters);
       console.log('Fetched trips:', data);
       console.log('Filter used:', filter);
       setTrips(data || []);
@@ -112,6 +111,8 @@ const Status: React.FC = () => {
         setShowAlert(false);
         setNoDataFound(false);
       }, 1500);
+    } catch (error) {
+      console.error('Error fetching trips:', error);
     }
     setCurrentPage(0); // Reset to first page on new search
   };

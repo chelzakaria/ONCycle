@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { LineChart } from '@tremor/react';
 import { useEffect, useState, useMemo } from 'react';
-import { supabase } from '../dbClient';
+import { fetchTripsForStatistics, type StatisticsFilters } from '../services/api';
 import { DateRangePicker } from '../components/tremor/DatePicker';
 import { Card } from '../components/tremor/Card';
 import { TabGroup, TabList, Tab, TabPanels, TabPanel, BarChart, BarList } from '@tremor/react';
@@ -17,6 +17,8 @@ interface Trip {
   arrival_delay: number | null;
   scheduled_arrival_time?: string;
   created_at?: string;
+  initial_departure_station?: string;
+  final_arrival_station?: string;
   start_station?: string;
   end_station?: string;
 }
@@ -117,24 +119,13 @@ const Statistics: React.FC = () => {
         const fromDate = formatDateForDB(dateRange.from);
         const toDate = formatDateForDB(dateRange.to);
 
-        console.log('Querying date range:', { fromDate, toDate });
+        // Use the API service to fetch trips for statistics
+        const filters: StatisticsFilters = {
+          from: fromDate,
+          to: toDate
+        };
 
-        // Use the train_delays view instead of trips table
-        const { data: tripsData, error: dbError } = await supabase
-          .from('train_delays')
-          .select('*')
-          .gte('date', fromDate)
-          .lte('date', toDate)
-          // .filter('arrival_delay', 'gte', 5) // Only include delays greater than 5 minutes
-          .returns<Trip[]>();
-
-        if (dbError) {
-          console.error('Database error:', dbError);
-          setError('Failed to fetch trip data');
-          setLoading(false);
-          return;
-        }
-
+        const tripsData = await fetchTripsForStatistics(filters);
         if (!tripsData || tripsData.length === 0) {
           console.log('No trips found for date range');
           setChartData([]);
@@ -143,9 +134,6 @@ const Statistics: React.FC = () => {
           setLoading(false);
           return;
         }
-
-        console.log('Raw trips data from view:', tripsData);
-        console.log('Number of trips found:', tripsData.length);
 
         setTrips(tripsData);
 
@@ -157,6 +145,8 @@ const Statistics: React.FC = () => {
         const allDates: string[] = Array.from(dateSet).sort((a, b) =>
           new Date(a).getTime() - new Date(b).getTime()
         );
+        
+
 
         // Get all train types present in the data
         const allTypes: string[] = ['TNR', 'TLR', 'TL', 'GV'];
@@ -188,8 +178,6 @@ const Statistics: React.FC = () => {
           return row;
         });
 
-        console.log('Chart data for selected date range:', chartRows);
-        console.log('Train types found:', allTypes);
         setChartData(chartRows);
         setCategories(allTypes);
 
@@ -265,9 +253,7 @@ const Statistics: React.FC = () => {
   ]
 
 
-  // Debug: log average and total delay data
-  console.log('Average Delay Data:', averageDelayData);
-  console.log('Total Delay Data (chartData):', chartData);
+
 
   return (
     <>
@@ -399,7 +385,6 @@ const Statistics: React.FC = () => {
                   .slice(0, 5)
                   .map(trip => {
                     const delay = trip.arrival_delay || 0;
-
                     return {
                       name: `${trip.start_station || 'Unknown'} → ${trip.end_station || 'Unknown'}`,
                       value: delay,
