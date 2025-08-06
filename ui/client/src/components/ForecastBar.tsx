@@ -4,232 +4,205 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import TrainIcon from '@mui/icons-material/Train';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import dayjs, { Dayjs } from 'dayjs';
-import { trainTypeOptions, validRoutes, departureOptions } from '../utils/trainData';
+
+interface TrafficRecord {
+  id: number;
+  train_id: string;
+  sequence: number;
+  current_station: string;
+  next_station: string;
+  train_type: string;
+  scheduled_departure_time?: string;
+  scheduled_arrival_time?: string;
+}
 
 export type ForecastBarValue = {
-  departure: typeof departureOptions[0] | null;
-  arrival: { label: string; code: string; color: string } | null;
-  trainType: typeof trainTypeOptions[0] | null;
+  departure: { label: string; train_id: string; sequence: number } | null;
+  arrival: { label: string; train_id: string; sequence: number } | null;
   date: Dayjs | null;
 };
 
 type ForecastBarProps = {
   value: ForecastBarValue;
   onChange: (value: ForecastBarValue) => void;
-  onPredict: () => void;
+  onPredict: (trainId: string) => void;
+  onReset: () => void;
+  onFindTrips: () => void;
+  trafficData: TrafficRecord[];
+  loading: boolean;
+  foundTrips: TrafficRecord[][];
 };
 
-const ForecastBar: React.FC<ForecastBarProps> = ({ value, onChange, onPredict }) => {
-  const { departure, arrival, trainType, date } = value;
+const ForecastBar: React.FC<ForecastBarProps> = ({
+  value,
+  onChange,
+  // onPredict,
+  onReset,
+  onFindTrips,
+  trafficData,
+  loading,
+  foundTrips
+}) => {
+  const { departure, arrival, date } = value;
 
-  // Get all valid routes based on current selections
-  const getValidRoutes = React.useCallback(() => {
-    let filteredRoutes = validRoutes;
-    if (departure) {
-      filteredRoutes = filteredRoutes.filter(r => r.departure === departure.label);
-    }
-    if (arrival) {
-      filteredRoutes = filteredRoutes.filter(r => r.arrival === arrival.label);
-    }
-    if (trainType) {
-      filteredRoutes = filteredRoutes.filter(r => r.trainType === trainType.code);
-    }
-    return filteredRoutes;
-  }, [departure, arrival, trainType]);
-
-  // Departure options based on current selections
-  const depOptions = React.useMemo(() => {
-    const filteredRoutes = getValidRoutes();
-    const allDepartures = filteredRoutes.map(r => ({
-      label: r.departure,
-      code: r.trainType,
-      color: r.departureColor
+  // Get unique departure stations (current_station)
+  const departureOptions = React.useMemo(() => {
+    const uniqueStations = [...new Set(trafficData.map(record => record.current_station))];
+    return uniqueStations.map(station => ({
+      label: station,
+      train_id: trafficData.find(r => r.current_station === station)?.train_id || '',
+      sequence: trafficData.find(r => r.current_station === station)?.sequence || 0
     }));
-    return Array.from(new Set(allDepartures.map(d => d.label)))
-      .map(label => allDepartures.find(d => d.label === label)!);
-  }, [getValidRoutes]);
+  }, [trafficData]);
 
-  // Arrival options based on current selections
-  const arrOptions = React.useMemo(() => {
-    const filteredRoutes = getValidRoutes();
-    const allArrivals = filteredRoutes.map(r => ({
-      label: r.arrival,
-      code: r.trainType,
-      color: r.arrivalColor
+  const arrivalOptions = React.useMemo(() => {
+    if (!departure) return [];
+
+
+    const trainIdsWithDeparture = trafficData
+      .filter(r => r.current_station === departure.label)
+      .map(r => r.train_id);
+
+    const maxSequenceByTrainId: Record<string, number> = {};
+    trainIdsWithDeparture.forEach(trainId => {
+      const maxSeq = Math.max(
+        ...trafficData
+          .filter(r => r.train_id === trainId && r.current_station === departure.label)
+          .map(r => r.sequence)
+      );
+      maxSequenceByTrainId[trainId] = maxSeq;
+    });
+
+
+    const validRecords = trafficData.filter(record =>
+      trainIdsWithDeparture.includes(record.train_id) &&
+      record.sequence >= maxSequenceByTrainId[record.train_id]
+    );
+
+    // Get unique next_station values
+    const uniqueStations = [...new Set(validRecords.map(record => record.next_station))];
+    return uniqueStations.map(station => ({
+      label: station,
+      train_id: departure.train_id,
+      sequence: validRecords.find(r => r.next_station === station)?.sequence || 0
     }));
-    return Array.from(new Set(allArrivals.map(a => a.label)))
-      .map(label => allArrivals.find(a => a.label === label)!);
-  }, [getValidRoutes]);
+  }, [trafficData, departure]);
 
-  // Train type options based on current selections
-  const availableTrainTypes = React.useMemo(() => {
-    const filteredRoutes = getValidRoutes();
-    const validTypes = [...new Set(filteredRoutes.map(r => r.trainType))];
-    return trainTypeOptions.filter(type => validTypes.includes(type.code));
-  }, [getValidRoutes]);
 
-  // Handle changes
   const handleDepartureChange = (newDeparture: typeof departureOptions[0] | null) => {
-    const filteredRoutes = newDeparture
-      ? validRoutes.filter(r => r.departure === newDeparture.label)
-      : validRoutes;
-    const validArrival = arrival && filteredRoutes.some(r => r.arrival === arrival.label)
-      ? arrival
-      : null;
-    const validTrainType = trainType && filteredRoutes.some(r => r.trainType === trainType.code)
-      ? trainType
-      : null;
+
     onChange({
       ...value,
       departure: newDeparture,
-      arrival: validArrival,
-      trainType: validTrainType
+      arrival: null,
     });
   };
 
-  const handleArrivalChange = (newArrival: typeof arrOptions[0] | null) => {
-    const filteredRoutes = newArrival
-      ? validRoutes.filter(r => r.arrival === newArrival.label)
-      : validRoutes;
-    const validDeparture = departure && filteredRoutes.some(r => r.departure === departure.label)
-      ? departure
-      : null;
-    const validTrainType = trainType && filteredRoutes.some(r => r.trainType === trainType.code)
-      ? trainType
-      : null;
+  const handleArrivalChange = (newArrival: typeof arrivalOptions[0] | null) => {
+
+
     onChange({
       ...value,
-      departure: validDeparture,
-      arrival: newArrival,
-      trainType: validTrainType
+      arrival: newArrival
     });
   };
 
-  const handleTrainTypeChange = (newTrainType: typeof trainTypeOptions[0] | null) => {
-    const filteredRoutes = newTrainType
-      ? validRoutes.filter(r => r.trainType === newTrainType.code)
-      : validRoutes;
-    const validDeparture = departure && filteredRoutes.some(r => r.departure === departure.label)
-      ? departure
-      : null;
-    const validArrival = arrival && filteredRoutes.some(r => r.arrival === arrival.label)
-      ? arrival
-      : null;
-    onChange({
-      ...value,
-      departure: validDeparture,
-      arrival: validArrival,
-      trainType: newTrainType
-    });
-  };
+
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{
-        minHeight: '100vh',
-        minWidth: '100vw',
+
+      <Paper elevation={5} sx={{
+        p: 3,
+        pb: 2,
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
- 
-      }}>
-        <Paper elevation={3} sx={{
-          p: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 3,
-          alignItems: 'center',
-          minWidth: '98vw',
+        gap: 1,
+        alignspans: 'center',
+        minWidth: '85vw',
+        marginTop: 8,
         //   width: 'fit-content',s
         //   maxWidth: 2000,
-          mx: 2,
-          background: '#181F29',
+        mx: 2,
+        background: '#181F29',
+      }}>
+        <Typography variant="h5" sx={{ mb: 3, color: '#fff', fontWeight: 700 }}>
+          Predict Your Trip’s Arrival Time
+        </Typography>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: 2,
+          alignspans: 'center',
+          justifyContent: 'center',
+          width: '100%',
         }}>
-          <Typography variant="h5" sx={{ mb: 2, color: '#fff', fontWeight: 700 }}>
-            Predict Train Delay
-          </Typography>
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            gap: 2,
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-          }}>
-            <Autocomplete
-              options={depOptions}
-              value={departure}
-              onChange={(_, newValue) => handleDepartureChange(newValue)}
-              getOptionLabel={option => option.label}
-              renderInput={params => (
-                <TextField {...params} label="Departure Station" sx={{ minWidth: 280 }} />
-              )}
-              renderOption={(props, option) => (
-                <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LocationOnIcon sx={{ color: option.color, fontSize: 20 }} />
-                  {option.label}
-                </Box>
-              )}
-            />
-            <Autocomplete
-              options={arrOptions}
-              value={arrival}
-              onChange={(_, newValue) => handleArrivalChange(newValue)}
-              getOptionLabel={option => option.label}
-              renderInput={params => (
-                <TextField {...params} label="Arrival Station" sx={{ minWidth: 280 }} />
-              )}
-              renderOption={(props, option) => (
-                <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LocationOnIcon sx={{ color: option.color, fontSize: 20 }} />
-                  {option.label}
-                </Box>
-              )}
-            />
-            <Autocomplete
-              options={availableTrainTypes}
-              value={trainType}
-              onChange={(_, newValue) => handleTrainTypeChange(newValue)}
-              getOptionLabel={option => option.label}
-              renderInput={params => (
-                <TextField {...params} label="Train Type" sx={{ minWidth: 280 }} />
-              )}
-              renderOption={(props, option) => (
-                <Box component="li" {...props} sx={{ display: 'flex', gap: 1 }}>
-                  <TrainIcon fontSize="small" sx={{ color: option.color }} />
-                  {option.label}
-                  <Box sx={{ ml: 'auto', display: 'flex', px: 1.5, py: 0.5, borderRadius: 2, border: `2px solid ${option.color}`, background: `${option.color}10`, alignItems: 'center' }}>
-                    <TrainIcon fontSize="small" sx={{ color: option.color, mr: 0.5 }} />
-                    <Typography variant="subtitle2" sx={{ color: option.color, fontWeight: 700, fontSize: 15, ml: 0.5 }}>
-                      {option.code}
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-            />
-            <DatePicker
-              label="Pick a date"
-              value={date}
-              format="DD/MM/YYYY"
-              onChange={newValue => onChange({ ...value, date: newValue })}
-              slotProps={{ textField: { sx: { minWidth: 280 } } }}
-              minDate={dayjs('2025-05-18')}
-            />
-          </Box>
+          <Autocomplete
+            options={departureOptions}
+            value={departure}
+            onChange={(_, newValue) => handleDepartureChange(newValue)}
+            getOptionLabel={option => option.label}
+            renderInput={params => (
+              <TextField {...params} label="Departure Station" sx={{ minWidth: 280 }} />
+            )}
+            renderOption={(props, option) => (
+              <Box component="li" {...props} sx={{ display: 'flex', alignspans: 'center', gap: 1 }}>
+                <LocationOnIcon sx={{ color: '#4CAF50', fontSize: 20 }} />
+                {option.label}
+              </Box>
+            )}
+            disabled={loading} />
+          <Autocomplete
+            options={arrivalOptions}
+            value={arrival}
+            onChange={(_, newValue) => handleArrivalChange(newValue)}
+            getOptionLabel={option => option.label}
+            renderInput={params => (
+              <TextField {...params} label="Arrival Station" sx={{ minWidth: 280 }} />
+            )}
+            renderOption={(props, option) => (
+              <Box component="li" {...props} sx={{ display: 'flex', alignspans: 'center', gap: 1 }}>
+                <LocationOnIcon sx={{ color: '#FF9800', fontSize: 20 }} />
+                {option.label}
+              </Box>
+            )}
+            disabled={loading || !departure} />
+
+
+          <DatePicker
+            label="Pick a date"
+            value={date}
+            format="DD/MM/YYYY"
+            onChange={newValue => onChange({ ...value, date: newValue })}
+            slotProps={{ textField: { sx: { minWidth: 280 } } }}
+            minDate={dayjs().startOf('day')} />
           <Button
             variant="contained"
             color="primary"
-            sx={{ mt: 2, minWidth: 200, fontWeight: 700, fontSize: 18 }}
-            onClick={onPredict}
+            sx={{ mt: 0, minWidth: 200, fontWeight: 650, fontSize: 17, minHeight: 50 }}
+            onClick={onFindTrips}
           >
-            Predict
+            Find Trip
           </Button>
-        </Paper>
-      </Box>
+          <Button
+            variant="contained"
+            color="secondary"
+            sx={{ mt: 0, minWidth: 200, fontWeight: 650, fontSize: 17, minHeight: 50 }}
+            onClick={onReset}
+          >
+            Reset
+          </Button>
+        </Box>
+        {/* Trips count display */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Typography variant="body2" sx={{ color: '#ccc', fontSize: '1rem', mr: 2 }}>
+            {foundTrips.length} trips found
+          </Typography>
+        </Box>
+
+      </Paper>
     </LocalizationProvider>
   );
 };
