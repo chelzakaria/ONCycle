@@ -78,7 +78,9 @@ export const fetchTripsForStatistics = async (filters?: StatisticsFilters): Prom
 
 export const fetchTrainDelays = async (): Promise<any[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/train_delays`, {
+
+
+    const response = await fetch(`${API_BASE_URL}/statistics`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -108,6 +110,26 @@ export const fetchTrafficData = async (): Promise<any[]> => {
     return await response.json();
   } catch (error) {
     console.error('Error fetching traffic data:', error);
+    throw error;
+  }
+};
+
+export const predictDelays = async (
+  payload: { train_id: string; scheduled_departure_time: string | undefined; trip_date: string; }[]
+): Promise<any> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/predict`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error predicting delays:', error);
     throw error;
   }
 };
