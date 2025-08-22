@@ -1,0 +1,11 @@
+fastapi==0.116.1
+uvicorn==0.35.0
+numpy==2.3.2
+pandas==2.3.2
+scikit-learn==1.7.1
+xgboost==3.0.4
+joblib==1.5.1
+pydantic==2.11.7
+pydantic-settings==2.10.1
+supabase==2.18.1
+python-dotenv==1.1.1
