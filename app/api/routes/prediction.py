@@ -4,9 +4,18 @@ Prediction API endpoints
 
 import time
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, HTTPException, Request, Depends, Header
 
 from core.logging import get_logger
+from core.config import settings
+
+
+def get_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
+    if x_api_key != settings.API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+    return x_api_key
+
+
 from schemas.prediction import (
     SingleStationPredictionRequest,
     SingleStationPredictionResponse,
@@ -36,6 +45,7 @@ def get_model_service(request: Request) -> ModelService:
 )
 async def predict_single_station(
     request: SingleStationPredictionRequest,
+    _api_key: str = Depends(get_api_key),
     model_service: ModelService = Depends(get_model_service),
 ) -> SingleStationPredictionResponse:
     """Predict delay for the next station"""
@@ -60,6 +70,7 @@ async def predict_single_station(
 )
 async def predict_batch(
     request: BatchPredictionRequest,
+    _api_key: str = Depends(get_api_key),
     model_service: ModelService = Depends(get_model_service),
 ) -> BatchPredictionResponse:
     """Process batch predictions"""

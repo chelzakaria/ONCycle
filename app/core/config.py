@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     SUPABASE_URL: str
     SUPABASE_KEY: str
+    API_KEY: str
 
     class Config:
         """Pydantic configuration"""
