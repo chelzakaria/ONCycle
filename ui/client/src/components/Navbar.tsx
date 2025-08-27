@@ -107,7 +107,7 @@ const Navbar: React.FC = () => {
               }}
             >
               <ListItemText
-                primary={link.simpleLabel}
+                primary={link.label}
                 sx={{
                   '& .MuiListItemText-primary': {
                     fontFamily: 'Urbanist, sans-serif',
@@ -215,7 +215,7 @@ const Navbar: React.FC = () => {
                 {navLinks.map((link) => (
                   <Tab
                     key={link.path}
-                    label={isTablet ? link.simpleLabel : link.label}
+                    label={link.label}
                     component={Link}
                     to={link.path}
                   />

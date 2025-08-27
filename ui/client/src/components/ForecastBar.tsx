@@ -1,10 +1,12 @@
 import React from 'react';
-import { Box, Paper, TextField, Typography, Button } from '@mui/material';
+import { Box, Paper, TextField, Typography, Button, Tooltip } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import SearchIcon from '@mui/icons-material/Search';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import dayjs, { Dayjs } from 'dayjs';
 
 interface TrafficRecord {
@@ -113,95 +115,296 @@ const ForecastBar: React.FC<ForecastBarProps> = ({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-
       <Paper elevation={5} sx={{
-        p: 3,
-        pb: 2,
+        p: { xs: 2, sm: 2.5, md: 3 },
+        pb: { xs: 1.5, sm: 2, md: 2 },
         display: 'flex',
         flexDirection: 'column',
-        gap: 1,
-        alignspans: 'center',
-        minWidth: '85vw',
-        marginTop: 8,
-        //   width: 'fit-content',s
-        //   maxWidth: 2000,
-        mx: 2,
+        gap: { xs: 1, sm: 1.5, md: 2 },
+        alignItems: 'center',
+        width: { xs: '95vw', sm: '90vw', md: '85vw' },
+        maxWidth: { xs: 'none', sm: 'none', md: 'none' },
+        minWidth: { xs: 'auto', sm: 'auto', md: 'auto' },
+        marginTop: { xs: 6, sm: 7, md: 8 },
+        mx: { xs: 'auto', sm: 'auto', md: 'auto' },
         background: '#181F29',
       }}>
-        <Typography variant="h5" sx={{ mb: 3, color: '#fff', fontWeight: 700 }}>
-          Predict Your Trip’s Arrival Time
+        <Typography variant="h5" sx={{
+          mb: { xs: 2, sm: 2.5, md: 3 },
+          color: '#fff',
+          fontWeight: 700,
+          fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
+          textAlign: 'center'
+        }}>
+          Predict Your Next Trip
         </Typography>
+
         <Box sx={{
           display: 'flex',
-          flexDirection: 'row',
-          gap: 2,
-          alignspans: 'center',
-          justifyContent: 'center',
+          flexDirection: { xs: 'column', sm: 'column', md: 'row' },
+          gap: { xs: 1.5, sm: 2, md: 2 },
+          alignItems: { xs: 'stretch', sm: 'stretch', md: 'center' },
+          justifyContent: { xs: 'center', sm: 'center', md: 'center' },
           width: '100%',
+          flexWrap: 'nowrap',
+          overflow: 'visible',
         }}>
+          {/* Departure Station */}
           <Autocomplete
-            options={departureOptions}
+            options={departureOptions.sort((a, b) => a.label.localeCompare(b.label))}
             value={departure}
             onChange={(_, newValue) => handleDepartureChange(newValue)}
             getOptionLabel={option => option.label}
+            sx={{
+
+              flex: {
+                xs: '1 1 100%',
+                sm: '1 1 calc(50% - 8px)',
+                md: '1 1 200px',
+                lg: '1 1 220px',
+                xl: '1 1 280px'
+              },
+              minWidth: {
+                xs: '100%',
+                sm: '200px',
+                md: '180px',
+                lg: '200px',
+                xl: '280px'
+              },
+              maxWidth: {
+                xs: '100%',
+                sm: '100%',
+                md: '300px',
+                lg: '320px',
+                xl: '320px'
+              }
+            }}
             renderInput={params => (
-              <TextField {...params} label="Departure Station" sx={{ minWidth: 280 }} />
+              <TextField {...params} label="Departure Station" />
             )}
-            renderOption={(props, option) => (
-              <Box component="li" {...props} sx={{ display: 'flex', alignspans: 'center', gap: 1 }}>
-                <LocationOnIcon sx={{ color: '#4CAF50', fontSize: 20 }} />
-                {option.label}
-              </Box>
-            )}
-            disabled={loading} />
+            renderOption={(props, option) => {
+              const { key, ...rest } = props;
+              return (
+                <Box component="li" key={key} {...rest} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <LocationOnIcon sx={{ color: '#4CAF50', fontSize: 20 }} />
+                  {option.label}
+                </Box>
+              );
+            }}
+            disabled={loading}
+          />
+
+          {/* Arrival Station */}
           <Autocomplete
-            options={arrivalOptions}
+            options={arrivalOptions.sort((a, b) => a.label.localeCompare(b.label))}
             value={arrival}
             onChange={(_, newValue) => handleArrivalChange(newValue)}
             getOptionLabel={option => option.label}
+            sx={{
+              // Matching responsive sizing with departure
+              flex: {
+                xs: '1 1 100%',
+                sm: '1 1 calc(50% - 8px)',
+                md: '1 1 200px',
+                lg: '1 1 220px',
+                xl: '1 1 280px'
+              },
+              minWidth: {
+                xs: '100%',
+                sm: '200px',
+                md: '180px',
+                lg: '200px',
+                xl: '280px'
+              },
+              maxWidth: {
+                xs: '100%',
+                sm: '100%',
+                md: '300px',
+                lg: '320px',
+                xl: '320px'
+              }
+            }}
             renderInput={params => (
-              <TextField {...params} label="Arrival Station" sx={{ minWidth: 280 }} />
+              <TextField {...params} label="Arrival Station" />
             )}
-            renderOption={(props, option) => (
-              <Box component="li" {...props} sx={{ display: 'flex', alignspans: 'center', gap: 1 }}>
-                <LocationOnIcon sx={{ color: '#FF9800', fontSize: 20 }} />
-                {option.label}
-              </Box>
-            )}
-            disabled={loading || !departure} />
+            renderOption={(props, option) => {
+              const { key, ...rest } = props;
+              return (
+                <Box component="li" key={key} {...rest} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <LocationOnIcon sx={{ color: '#FF9800', fontSize: 20 }} />
+                  {option.label}
+                </Box>
+              );
+            }}
+            disabled={loading || !departure}
+          />
 
+          {/* Date Picker */}
+          <Box sx={{
+            flex: {
+              xs: '1 1 100%',
+              sm: '1 1 calc(50% - 8px)',
+              md: '1 1 200px',
+              lg: '1 1 220px',
+              xl: '1 1 280px'
+            },
+            minWidth: {
+              xs: '100%',
+              sm: '200px',
+              md: '180px',
+              lg: '200px',
+              xl: '280px'
+            },
+            maxWidth: {
+              xs: '100%',
+              sm: '100%',
+              md: '300px',
+              lg: '320px',
+              xl: '320px'
+            }
+          }}>
+            <DatePicker
+              label="Pick a date"
+              value={date}
+              format="DD/MM/YYYY"
+              onChange={newValue => onChange({ ...value, date: newValue })}
+              sx={{ width: '100%' }}
+              slotProps={{
+                textField: {
+                  sx: {
+                    width: '100%'
+                  }
+                }
+              }}
+              minDate={dayjs().startOf('day')}
+            />
+          </Box>
 
-          <DatePicker
-            label="Pick a date"
-            value={date}
-            format="DD/MM/YYYY"
-            onChange={newValue => onChange({ ...value, date: newValue })}
-            slotProps={{ textField: { sx: { minWidth: 280 } } }}
-            minDate={dayjs().startOf('day')} />
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ mt: 0, minWidth: 200, fontWeight: 650, fontSize: 17, minHeight: 50 }}
-            onClick={onFindTrips}
-          >
-            Find Trip
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            sx={{ mt: 0, minWidth: 200, fontWeight: 650, fontSize: 17, minHeight: 50 }}
-            onClick={onReset}
-          >
-            Reset
-          </Button>
+          {/* Action Buttons Container */}
+          <Box sx={{
+            display: 'flex',
+            flexDirection: { xs: 'row', sm: 'row', md: 'row' },
+            gap: { xs: 1.5, sm: 1.5, md: 2 },
+            justifyContent: { xs: 'center', sm: 'center', md: 'flex-start' },
+            flexShrink: 0,
+            alignItems: 'center',
+            mt: { xs: 1, sm: 0, md: 0 },
+            // Improved button container sizing
+            width: { xs: '100%', sm: '100%', md: 'auto' },
+            flex: { xs: 'none', sm: 'none', md: '0 0 auto' }
+          }}>
+
+            {/* Find Trip Button */}
+            <Box sx={{
+              display: { xs: 'block', sm: 'block', md: 'none', lg: 'block' },
+              flex: { xs: '1', sm: '1', md: 'none', lg: 'none' }
+            }}>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{
+                  minWidth: { xs: '100%', sm: '100%', md: 150, lg: 150 },
+                  width: { xs: '100%', sm: '100%', md: 'auto', lg: 'auto' },
+                  fontWeight: 650,
+                  fontSize: { xs: 16, md: 17 },
+                  minHeight: { xs: 45, md: 50 },
+                  py: { xs: 1.5, md: 2 }
+                }}
+                onClick={onFindTrips}
+              >
+                Find Trip
+              </Button>
+            </Box>
+
+            <Box sx={{ display: { xs: 'none', sm: 'none', md: 'block', lg: 'none' } }}>
+              <Tooltip title="Find trips" placement="top">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{
+                    minWidth: 50,
+                    height: 50,
+                    fontWeight: 700,
+                    p: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onClick={onFindTrips}
+                >
+                  <SearchIcon sx={{ fontSize: 32 }} />
+                </Button>
+              </Tooltip>
+            </Box>
+
+            {/* Reset Button */}
+            <Box sx={{
+              display: { xs: 'block', sm: 'block', md: 'none', lg: 'block' },
+              flex: { xs: '1', sm: '1', md: 'none', lg: 'none' }
+            }}>
+              {/* Full width buttons on same line for xs and sm, original for lg+ */}
+              <Button
+                variant="contained"
+                color="secondary"
+                sx={{
+                  minWidth: { xs: '100%', sm: '100%', md: 150, lg: 150 },
+                  width: { xs: '100%', sm: '100%', md: 'auto', lg: 'auto' },
+                  fontWeight: 650,
+                  fontSize: { xs: 16, md: 17 },
+                  minHeight: { xs: 45, md: 50 },
+                  py: { xs: 1.5, md: 2 }
+                }}
+                onClick={onReset}
+              >
+                Reset
+              </Button>
+            </Box>
+
+            <Box sx={{ display: { xs: 'none', sm: 'none', md: 'block', lg: 'none' } }}>
+              {/* Square icon button for md only (900px-1200px) */}
+              <Tooltip title="Reset form" placement="top">
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  sx={{
+                    minWidth: 50,
+                    height: 50,
+                    fontWeight: 700,
+                    p: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    '&:hover': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                    }
+                  }}
+                  onClick={onReset}
+                >
+                  <RestartAltIcon sx={{ fontSize: 32 }} />
+                </Button>
+              </Tooltip>
+            </Box>
+          </Box>
         </Box>
+
         {/* Trips count display */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-          <Typography variant="body2" sx={{ color: '#ccc', fontSize: '1rem', mr: 2 }}>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: { xs: 'center', sm: 'flex-end', md: 'flex-end' },
+          mt: { xs: 1.5, sm: 2, md: 2 },
+          width: '100%'
+        }}>
+          <Typography variant="body2" sx={{
+            color: '#ccc',
+            fontSize: { xs: '0.9rem', sm: '0.95rem', md: '1rem' },
+            mr: { xs: 0, sm: 2, md: 2 },
+            textAlign: { xs: 'center', sm: 'right', md: 'right' }
+          }}>
             {foundTrips.length} trips found
           </Typography>
         </Box>
-
       </Paper>
     </LocalizationProvider>
   );
