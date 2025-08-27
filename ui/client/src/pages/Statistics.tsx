@@ -7,6 +7,27 @@ import { DateRangePicker } from '../components/tremor/DatePicker';
 import { Card } from '../components/tremor/Card';
 import { TabGroup, TabList, Tab, TabPanels, TabPanel, BarChart, BarList } from '@tremor/react';
 
+function useWindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    height: typeof window !== 'undefined' ? window.innerHeight : 900,
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return windowSize;
+}
+
 // TypeScript interfaces
 interface Trip {
   id?: number;
@@ -40,8 +61,6 @@ interface ValueLookup {
 }
 
 
-
-// Utility functions
 export function cx(...args: (string | undefined | null | false)[]): string {
   return twMerge(clsx(...args));
 }
@@ -75,6 +94,7 @@ function formatDateForDB(date: Date): string {
 
 
 const Statistics: React.FC = () => {
+  const windowSize = useWindowSize();
   const [dateRange, setDateRange] = useState<DateRange>({
     from: new Date(new Date().setDate(new Date().getDate() - 10)),
     to: new Date(),
@@ -137,15 +157,11 @@ const Statistics: React.FC = () => {
 
         setTrips(tripsData);
 
-        // No need to group by date+train_id since the view already gives us last sequence
-        // trips already contains only the final sequence for each train per date
-
-        // Get all unique dates in the range
         const dateSet = new Set<string>(tripsData.map((trip: Trip) => trip.date));
         const allDates: string[] = Array.from(dateSet).sort((a, b) =>
           new Date(a).getTime() - new Date(b).getTime()
         );
-        
+
 
 
         // Get all train types present in the data
@@ -252,21 +268,35 @@ const Statistics: React.FC = () => {
     },
   ]
 
-
-
+  const isSmallScreen = windowSize.width < 900;
+  const topMargin = isSmallScreen ? 60 : 75;
+  const minHeight = `calc(100vh - ${topMargin}px)`;
 
   return (
     <>
-      <div className="relative pr-8 w-full py-3 px-2" style={{ background: '#11161B', minHeight: 'calc(100vh - 75px)', marginTop: '75px' }}>
-        <div className="flex items-center justify-between px-6  mb-3">
-          <h3 className="text-tremor-title font-semibold text-tremor-content-strong dark:text-dark-tremor-content-strong">
-            Train Delay History
+      <div
+        className={cx(
+          "relative w-full max-w-full py-3 px-5",
+          // Responsive margins and heights using CSS classes (preferred method)
+          "mt-[60px] md:mt-[75px]",
+          "min-h-[calc(100vh-60px)] md:min-h-[calc(100vh-75px)]"
+        )}
+        style={{
+          background: '#11161B',
+          // Alternative: Dynamic styles that update on resize
+          marginTop: `${topMargin}px`,
+          minHeight: minHeight,
+        }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
+            Delay History
             {/* <p className="text-tremor-content text-sm dark:text-dark-tremor-content">
               View historical train delay data for the last 6 months
             </p> */}
-          </h3>
+          </p>
           <div className="flex items-center space-x-2">
-            <span className="text-tremor-default text-gray-300 dark:text-gray-400">Pick a date range:</span>
+            <span className="text-tremor-default text-gray-300 dark:text-gray-400 hidden sm:inline">Pick a date range:</span>
             <DateRangePicker
               toDate={new Date()}
               presets={presets}
@@ -277,7 +307,7 @@ const Statistics: React.FC = () => {
             />
           </div>
         </div>
-        <div className="w-full rounded-tremor-default border-2 border-[#3B4A59] bg-[#11161B] pb-8 pt-0 pr-6 py-4 ml-3 shadow-tremor-input md:h-200">
+        <div className="w-full rounded-tremor-default border-2 border-[#3B4A59] bg-[#11161B] pb-8 pt-0 pr-6 py-4 shadow-tremor-input md:h-200">
           <div className="mt-4">
             <TabGroup defaultIndex={0}>
               <TabList className="flex justify-center gap-2 border-b border-gray-700 bg-transparent pb-2">
@@ -367,7 +397,7 @@ const Statistics: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-28 w-full ml-5 pr-6">
+        <div className="flex flex-col md:flex-row gap-2 sm:gap-5 w-full">
           <Card className="flex-1 mt-4 rounded-tremor-default  !border-2 !border-[#3B4A59] !bg-[#11161B] shadow-tremor-input pb-8 pt-0 pr-6 py-4 dark:text-dark-tremor-content">
             <div className="flex items-center justify-between">
               <p className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
