@@ -4,7 +4,6 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import TrainIcon from '@mui/icons-material/Train';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { Dayjs } from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -178,36 +177,55 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
         elevation={0}
         sx={{
           backgroundColor: '#11161B',
-          top: '75px',
-          height: '95px',
+          top: { xs: '60px', sm: '60px', md: '75px' },
+          height: { xs: 'auto', sm: 'auto', md: '95px' },
+          minHeight: { xs: '120px', sm: '140px', md: '95px' },
           justifyContent: 'center',
           zIndex: 1100,
-          px: 5,
-          pt: 2,
-          pb: 1,
+          px: { xs: 2, sm: 3, md: 5 },
+          pt: { xs: 1, sm: 1.5, md: 2 },
+          pb: { xs: 1, sm: 1.5, md: 1 },
           borderTop: '1.5px solid #3B4A59',
           borderBottom: '1.5px solid #3B4A59',
         }}
       >
         <Toolbar sx={{
-          minHeight: '85px !important',
-          px: { xs: 2, md: 4 },
+          minHeight: { xs: '100px !important', sm: '120px !important', md: '85px !important' },
+          px: { xs: 1, sm: 2, md: 3, lg: 4, xl: 4 },
           display: 'flex',
-          gap: 4,
-          justifyContent: 'flex-start',
+          flexDirection: { xs: 'column', sm: 'column', md: 'row' },
+          gap: { xs: 1.5, sm: 2, md: 2, lg: 3, xl: 4 },
+          justifyContent: { xs: 'center', sm: 'center', md: 'flex-start' },
+          alignItems: { xs: 'stretch', sm: 'stretch', md: 'center' },
         }}>
-          <Paper elevation={0} sx={{ display: 'flex', alignItems: 'center', gap: 2, background: 'transparent', boxShadow: 'none', p: 0, width: '100%', justifyContent: 'center' }}>
+          <Paper elevation={0} sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row', md: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center', md: 'center' },
+            gap: { xs: 1.5, sm: 1.5, md: 1.5, lg: 2, xl: 2 },
+            background: 'transparent',
+            boxShadow: 'none',
+            p: 0,
+            width: '100%',
+            justifyContent: { xs: 'stretch', sm: 'center', md: 'center' },
+            flexWrap: { xs: 'nowrap', sm: 'wrap', md: 'nowrap' },
+            // overflow: 'hidden'
+          }}>
             {/* Departure Station */}
             <Autocomplete
               options={departureOptions.sort((a, b) => a.label.localeCompare(b.label))}
               value={departure}
               onChange={(_, newValue) => handleDepartureChange(newValue)}
               getOptionLabel={(option) => option.label}
+              sx={{
+                flex: { xs: '1 1 100%', sm: '1 1 180px', md: '1 1 180px', lg: '1 1 220px', xl: '0 0 280px' },
+                minWidth: { xs: '100%', sm: 180, md: 180, lg: 220, xl: 280 },
+                maxWidth: { xs: '100%', sm: '100%', md: '250px', lg: '280px', xl: 280 }
+              }}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   label="Departure Station"
-                  sx={{ minWidth: 280 }}
                 />
               )}
               renderOption={(props, option) => {
@@ -227,11 +245,15 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
               value={arrival}
               onChange={(_, newValue) => handleArrivalChange(newValue)}
               getOptionLabel={(option) => option.label}
+              sx={{
+                flex: { xs: '1 1 100%', sm: '1 1 180px', md: '1 1 180px', lg: '1 1 220px', xl: '0 0 280px' },
+                minWidth: { xs: '100%', sm: 180, md: 180, lg: 220, xl: 280 },
+                maxWidth: { xs: '100%', sm: '100%', md: '250px', lg: '280px', xl: 280 }
+              }}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   label="Arrival Station"
-                  sx={{ minWidth: 280 }}
                 />
               )}
               renderOption={(props, option) => {
@@ -250,11 +272,15 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
               value={trainType}
               onChange={(_, newValue) => handleTrainTypeChange(newValue)}
               getOptionLabel={(option) => option.label}
+              sx={{
+                flex: { xs: '1 1 100%', sm: '1 1 180px', md: '1 1 180px', lg: '1 1 220px', xl: '0 0 280px' },
+                minWidth: { xs: '100%', sm: 180, md: 180, lg: 220, xl: 280 },
+                maxWidth: { xs: '100%', sm: '100%', md: '250px', lg: '280px', xl: 280 }
+              }}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   label="Train Type"
-                  sx={{ minWidth: 280 }}
                   InputProps={{
                     ...params.InputProps,
                     endAdornment: trainType ? (
@@ -262,7 +288,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
                         {params.InputProps.endAdornment}
                         <Box sx={{ display: 'flex', px: 1.5, py: 0.5, borderRadius: 2, border: `2px solid ${trainType.color}`, background: `${trainType.color}10`, alignItems: 'center' }}>
                           <TrainIcon fontSize="small" sx={{ color: trainType.color, mr: 0.5 }} />
-                          <Typography variant="subtitle2" sx={{ color: trainType.color, fontWeight: 700, fontSize: 15, ml: 0.5 }}>
+                          <Typography variant="subtitle2" sx={{ color: trainType.color, fontWeight: 700, fontSize: { xs: 13, md: 15 }, ml: 0.5 }}>
                             {trainType.code}
                           </Typography>
                         </Box>
@@ -279,7 +305,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
                     {option.label}
                     <Box sx={{ ml: 'auto', display: 'flex', px: 1.5, py: 0.5, borderRadius: 2, border: `2px solid ${option.color}`, background: `${option.color}10`, alignItems: 'center' }}>
                       <TrainIcon fontSize="small" sx={{ color: option.color, mr: 0.5 }} />
-                      <Typography variant="subtitle2" sx={{ color: option.color, fontWeight: 700, fontSize: 15, ml: 0.5 }}>
+                      <Typography variant="subtitle2" sx={{ color: option.color, fontWeight: 700, fontSize: { xs: 13, md: 15 }, ml: 0.5 }}>
                         {option.code}
                       </Typography>
                     </Box>
@@ -288,86 +314,166 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
               }}
             />
             {/* Date Picker */}
-            <DatePicker
-              label="Pick a date"
-              value={date}
-              format="DD/MM/YYYY"
-              onChange={newValue => onChange({ ...value, date: newValue })}
-              slotProps={{ textField: { sx: { minWidth: 280 } } }}
-              disableFuture
-              minDate={dayjs('2025-05-18')}
-            />
-            <Tooltip title="Search for trains" placement="top">
-
-              <Button
-                variant="contained"
-                color="primary"
-                sx={{
-                  minWidth: 50,
-                  height: 50,
-                  fontWeight: 700,
-                  fontSize: 18,
-                  p: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                onClick={handleSearch}
-              >
-                <SearchIcon fontSize="large" />
-              </Button>
-            </Tooltip>
-            <Tooltip title="Reset filters" placement="top">
-
-              <Button
-                variant="outlined"
-                color="primary"
-                sx={{
-                  minWidth: 50,
-                  height: 50,
-                  fontWeight: 700,
-                  fontSize: 18,
-                  p: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
-                  '&:hover': {
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)'
+            <Box sx={{
+              flex: { xs: '1 1 100%', sm: '1 1 180px', md: '1 1 180px', lg: '1 1 220px', xl: '0 0 280px' },
+              minWidth: { xs: '100%', sm: 180, md: 180, lg: 220, xl: 280 },
+              maxWidth: { xs: '100%', sm: '100%', md: '250px', lg: '280px', xl: 280 }
+            }}>
+              <DatePicker
+                label="Pick a date"
+                value={date}
+                format="DD/MM/YYYY"
+                onChange={newValue => onChange({ ...value, date: newValue })}
+                sx={{ width: '100%' }}
+                slotProps={{
+                  textField: {
+                    sx: {
+                      width: '100%'
+                    }
                   }
                 }}
-                onClick={() => {
-                  onChange({
-                    departure: null,
-                    arrival: null,
-                    trainType: null,
-                    date: null
-                  });
-                  setLastSearchValues(null);
-                  if (typeof onReset === 'function') onReset(); // <-- Add this line
-                }}
-              >
-                <RestartAltIcon fontSize="large" />
-              </Button>
-            </Tooltip>
+                disableFuture
+                minDate={dayjs('2025-05-18')}
+              />
+            </Box>
+            {/* Action Buttons Container */}
+            <Box sx={{
+              display: 'flex',
+              gap: { xs: 1, sm: 1.5, md: 2 },
+              justifyContent: { xs: 'center', sm: 'center', md: 'flex-start' },
+              flexShrink: 0,
+              alignItems: 'center',
+              mt: { xs: 1, sm: 0, md: 0 }
+            }}>
+              <Tooltip title="Search for trains" placement="top">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{
+                    minWidth: { xs: 45, md: 50 },
+                    height: { xs: 45, md: 50 },
+                    fontWeight: 700,
+                    fontSize: { xs: 16, md: 18 },
+                    p: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onClick={handleSearch}
+                >
+                  <SearchIcon sx={{ fontSize: { xs: 24, md: 32 } }} />
+                </Button>
+              </Tooltip>
+              <Tooltip title="Reset filters" placement="top">
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  sx={{
+                    minWidth: { xs: 45, md: 50 },
+                    height: { xs: 45, md: 50 },
+                    fontWeight: 700,
+                    fontSize: { xs: 16, md: 18 },
+                    p: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    '&:hover': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)'
+                    }
+                  }}
+                  onClick={() => {
+                    onChange({
+                      departure: null,
+                      arrival: null,
+                      trainType: null,
+                      date: null
+                    });
+                    setLastSearchValues(null);
+                    if (typeof onReset === 'function') onReset(); // <-- Add this line
+                  }}
+                >
+                  <RestartAltIcon sx={{ fontSize: { xs: 24, md: 32 } }} />
+                </Button>
+              </Tooltip>
+            </Box>
             {/* Current search values display */}
-            {lastSearchValues &&
+            {/* {lastSearchValues &&
               lastSearchValues.departure &&
               lastSearchValues.arrival &&
               lastSearchValues.trainType &&
               lastSearchValues.date && (
                 <Tooltip title="Current search values" placement="top">
-                  <span className="inline-flex flex-col items-center  rounded-tremor-small bg-blue-100 px-3 py-2 text-tremor-label font-bold text-blue-800 ring-1 ring-inset ring-blue-600/10 dark:bg-blue-400/20 dark:text-blue-500 dark:ring-blue-400/20" style={{ fontSize: '0.8rem' }}>
-                    <span className="flex items-center gap-x-2" >
-                      {lastSearchValues.departure.label} <ArrowForwardIcon sx={{ fontSize: 20 }} /> {lastSearchValues.arrival.label}
-                    </span>
-                    <span>
-                      {lastSearchValues.date.format('dddd, MMMM DD, YYYY')}
-                    </span>
-                  </span>
+                  <Box
+                    sx={{
+                      display: 'inline-flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      borderRadius: 1,
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                      px: { xs: 1.5, sm: 2, md: 2.5, lg: 3 },
+                      py: { xs: 0.5, sm: 0.5, md: 1, lg: 1 },
+                      fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem', lg: '0.8rem' },
+                      fontWeight: 700,
+                      color: 'rgb(59, 130, 246)',
+                      border: '1px solid rgba(59, 130, 246, 0.2)',
+                      flexShrink: 0,
+                      minWidth: { xs: 'auto', sm: 'auto', md: 'auto' },
+                      maxWidth: { xs: '200px', sm: '250px', md: 'none' },
+                      mt: { xs: 1, sm: 0, md: 0 }
+                    }}
+                  >
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: { xs: 0.5, sm: 0.75, md: 1 },
+                      flexWrap: { xs: 'wrap', sm: 'nowrap', md: 'nowrap' },
+                      justifyContent: 'center'
+                    }}>
+                      <Typography variant="caption" sx={{
+                        fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem', lg: '0.8rem' },
+                        fontWeight: 700,
+                        textAlign: 'center',
+                        whiteSpace: { xs: 'nowrap', sm: 'nowrap', md: 'nowrap' },
+                        overflow: { xs: 'hidden', sm: 'visible', md: 'visible' },
+                        textOverflow: { xs: 'ellipsis', sm: 'clip', md: 'clip' },
+                        maxWidth: { xs: '80px', sm: 'none', md: 'none' }
+                      }}>
+                        {lastSearchValues.departure.label}
+                      </Typography>
+                      <ArrowForwardIcon sx={{ fontSize: { xs: 14, sm: 16, md: 18, lg: 20 } }} />
+                      <Typography variant="caption" sx={{
+                        fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem', lg: '0.8rem' },
+                        fontWeight: 700,
+                        textAlign: 'center',
+                        whiteSpace: { xs: 'nowrap', sm: 'nowrap', md: 'nowrap' },
+                        overflow: { xs: 'hidden', sm: 'visible', md: 'visible' },
+                        textOverflow: { xs: 'ellipsis', sm: 'clip', md: 'clip' },
+                        maxWidth: { xs: '80px', sm: 'none', md: 'none' }
+                      }}>
+                        {lastSearchValues.arrival.label}
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" sx={{
+                      fontSize: { xs: '0.6rem', sm: '0.65rem', md: '0.7rem', lg: '0.75rem' },
+                      fontWeight: 700,
+                      textAlign: 'center',
+                      mt: 0.5,
+                      whiteSpace: { xs: 'nowrap', sm: 'normal', md: 'normal' },
+                      overflow: { xs: 'hidden', sm: 'visible', md: 'visible' },
+                      textOverflow: { xs: 'ellipsis', sm: 'clip', md: 'clip' }
+                    }}>
+                      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                        {lastSearchValues.date.format('dddd, MMMM DD, YYYY')}
+                      </Box>
+                      <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                        {lastSearchValues.date.format('DD/MM/YY')}
+                      </Box>
+                    </Typography>
+                  </Box>
                 </Tooltip>
-              )}
+              )} */}
 
           </Paper>
         </Toolbar>
