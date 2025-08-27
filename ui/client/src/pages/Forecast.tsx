@@ -229,7 +229,7 @@ const Forecast: React.FC = () => {
   const endIndex = startIndex + TRIPS_PER_PAGE;
   const currentTrips = foundTrips.slice(startIndex, endIndex);
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
   };
 

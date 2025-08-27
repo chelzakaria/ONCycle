@@ -133,3 +133,21 @@ export const predictDelays = async (
     throw error;
   }
 };
+
+export const latestDate = async (): Promise<any> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/latest_date`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching latest date:', error);
+    throw error;
+  }
+}

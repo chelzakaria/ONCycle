@@ -10,6 +10,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import SearchIcon from '@mui/icons-material/Search';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { trainTypeOptions, validRoutes, departureOptions } from '../utils/trainData';
+import { latestDate } from '../services/api';
 import dayjs from 'dayjs';
 
 
@@ -32,6 +33,24 @@ type FilterBarProps = {
 const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onReset }) => {
   const { departure, arrival, trainType, date } = value;
   const [lastSearchValues, setLastSearchValues] = React.useState<FilterBarValue | null>(null);
+  const [maxDate, setMaxDate] = React.useState<Dayjs>();
+
+  React.useEffect(() => {
+    const fetchLatestDate = async () => {
+      try {
+        const response = await latestDate();
+        if (response && response.latest_date) {
+          setMaxDate(dayjs(response.latest_date));
+          console.log('Latest date fetched:', response.latest_date);
+        }
+      } catch (error) {
+        console.error('Error fetching latest date:', error);
+
+      }
+    };
+
+    fetchLatestDate();
+  }, []);
 
   // Function to check if current values are different from last search
   const hasValuesChanged = React.useCallback(() => {
@@ -334,6 +353,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
                 }}
                 disableFuture
                 minDate={dayjs('2025-05-18')}
+                maxDate={maxDate}
               />
             </Box>
             {/* Action Buttons Container */}
