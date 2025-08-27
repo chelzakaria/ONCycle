@@ -2,7 +2,7 @@ import React from 'react';
 import FilterBar, { type FilterBarValue } from '../components/FilterBar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { Tooltip } from '@mui/material';
+import { Divider, Tooltip } from '@mui/material';
 import { Pagination } from '@mui/material';
 import { fetchTrips, type TripFilters } from '../services/api';
 import Alert from '@mui/material/Alert';
@@ -29,8 +29,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box } from '@mui/material';
 
 const NUM_COLUMNS = 24;
-const COLUMN_WIDTH_PERCENT = 100 / NUM_COLUMNS;
-const TRAIN_HEIGHT = 60; // px
+const NUM_COLUMNS_MOBILE = 12;
 
 const initialFilter: FilterBarValue = {
   departure: null,
@@ -47,6 +46,62 @@ const Status: React.FC = () => {
   const [selectedTrain, setSelectedTrain] = React.useState<any[]>([]);
   const [openDialog, setOpenDialog] = React.useState(false);
   const [noDataFound, setNoDataFound] = React.useState(false);
+
+  // Add responsive column detection
+  const [isMobile, setIsMobile] = React.useState(false);
+  const [trainsPerPage, setTrainsPerPage] = React.useState(12);
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    const calculateTrainsPerPageFromDOM = () => {
+      // Find the first train element
+      const firstTrainElement = document.querySelector('[data-train-index="0"]');
+      if (!firstTrainElement) {
+        setTrainsPerPage(12);
+        return;
+      }
+
+      const trainRect = firstTrainElement.getBoundingClientRect();
+      const containerElement = document.querySelector('.page-container');
+      if (!containerElement) {
+        setTrainsPerPage(12);
+        return;
+      }
+
+      const containerRect = containerElement.getBoundingClientRect();
+
+      // Calculate available height for trains
+      const trainTop = trainRect.top - containerRect.top;
+      const availableHeight = containerRect.height - trainTop - 50;
+
+      const trainHeight = trainRect.height + 5;
+
+      // Calculate how many trains can fit
+      const calculatedTrainsPerPage = Math.max(6, Math.floor(availableHeight / trainHeight));
+
+      setTrainsPerPage(calculatedTrainsPerPage);
+    };
+
+    const handleResize = () => {
+      checkMobile();
+      // Delay calculation to ensure DOM is updated
+      setTimeout(calculateTrainsPerPageFromDOM, 100);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', handleResize);
+
+    // Calculate after component mounts and when trains are rendered
+    setTimeout(calculateTrainsPerPageFromDOM, 100);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, [trips]); // Re-run when trips change
+
+  const currentNumColumns = isMobile ? NUM_COLUMNS_MOBILE : NUM_COLUMNS;
+  const currentColumnWidth = 100 / currentNumColumns;
 
   // Calculate the starting hour based on the first train's departure time
   const getTimelineStartHour = React.useMemo(() => {
@@ -123,11 +178,11 @@ const Status: React.FC = () => {
     return Array.from(trainIds);
   }, [trips]);
 
-  // Get current page of trains (12 per page)
+  // Get current page of trains (dynamic per page based on screen height)
   const currentTrains = React.useMemo(() => {
-    const start = currentPage * 12;
-    return uniqueTrainIds.slice(start, start + 12);
-  }, [uniqueTrainIds, currentPage]);
+    const start = currentPage * trainsPerPage;
+    return uniqueTrainIds.slice(start, start + trainsPerPage);
+  }, [uniqueTrainIds, currentPage, trainsPerPage]);
 
   // Calculate starting column for each train based on theoretical departure time
   const getTrainStartColumn = (trainId: string) => {
@@ -142,7 +197,9 @@ const Status: React.FC = () => {
     const [hours] = firstSequenceTrip.scheduled_departure_time.split(':');
     const departureHour = parseInt(hours, 10);
     const column = (departureHour - getTimelineStartHour + 24) % 24;
-    return column;
+
+    // Scale column position for mobile
+    return isMobile ? Math.floor(column / 2) : column;
   };
 
   const getCarriagesNumber = (trainId: string) => {
@@ -163,8 +220,11 @@ const Status: React.FC = () => {
     // Handle midnight crossing
     if (arrival < departure) arrival += 24;
 
-    const totalHours = Math.floor(arrival - departure)
-    return Math.max(0, totalHours);
+    const totalHours = Math.floor(arrival - departure);
+    const carriages = Math.max(0, totalHours);
+
+    // On mobile, scale down carriages by half to match column reduction
+    return isMobile ? Math.max(0, Math.floor(carriages / 2)) : carriages;
   };
 
 
@@ -329,20 +389,20 @@ const Status: React.FC = () => {
             pointerEvents: 'none',
           }}>
             {/* Timeline header */}
-            <div style={{
+            <div className="hidden md:flex" style={{
               height: 50,
               width: '100%',
-              display: 'flex',
               alignItems: 'center',
               backgroundColor: '#101418',
               position: 'sticky',
               top: 0,
               zIndex: 2,
+
             }}>
-              {[...Array(NUM_COLUMNS)].map((_, i) => (
+              {[...Array(currentNumColumns)].map((_, i) => (
                 <Tooltip
                   key={i}
-                  title={`This column represents the time interval ${getHourLabel(i)}`}
+                  title={`This column represents the time interval ${getHourLabel(isMobile ? i * 2 : i)}`}
                   placement="top-start"
                 >
                   <div
@@ -361,7 +421,7 @@ const Status: React.FC = () => {
                       pointerEvents: 'auto',
                     }}
                   >
-                    {getHourLabel(i)}
+                    {getHourLabel(isMobile ? i * 2 : i)}
                   </div>
                 </Tooltip>
               ))}
@@ -372,7 +432,7 @@ const Status: React.FC = () => {
               display: 'flex',
               width: '100%',
             }}>
-              {[...Array(NUM_COLUMNS)].map((_, i) => (
+              {[...Array(currentNumColumns)].map((_, i) => (
                 <div
                   key={i}
                   style={{
@@ -406,14 +466,16 @@ const Status: React.FC = () => {
               return (
                 <div
                   key={trainId}
+                  data-train-index={index}
+                  className={index === 0 ? "mt-[250px] sm:mt-[60px] md:mt-[50px]" : "mt-[5px]"}
                   style={{
                     position: 'relative',
-                    height: 100,
-                    marginBottom: -45,
-                    marginTop: index === 0 ? 20 : 0,
+                    height: 'auto',
+                    // marginBottom: -45,
+                    // marginTop: 50,
                     display: 'flex',
                     alignItems: 'center',
-                    left: `${startColumn * COLUMN_WIDTH_PERCENT}%`,
+                    left: `${startColumn * currentColumnWidth}%`,
                   }}
 
                 >
@@ -423,8 +485,9 @@ const Status: React.FC = () => {
                       src={carriageImage}
                       alt={`Carriage ${carIdx + 1}`}
                       style={{
-                        height: TRAIN_HEIGHT,
-                        width: `${COLUMN_WIDTH_PERCENT}%`,
+                        // height: TRAIN_HEIGHT,
+                        height: 'auto',
+                        width: `${currentColumnWidth}%`,
                         objectFit: 'contain',
                         cursor: 'pointer',
                       }}
@@ -436,8 +499,9 @@ const Status: React.FC = () => {
                     src={frontImage}
                     alt="Train front"
                     style={{
-                      height: TRAIN_HEIGHT,
-                      width: `${COLUMN_WIDTH_PERCENT}%`,
+                      // height: TRAIN_HEIGHT,
+                      height: 'auto',
+                      width: `${currentColumnWidth}%`,
                       objectFit: 'contain',
                       cursor: 'pointer',
                     }}
@@ -461,21 +525,21 @@ const Status: React.FC = () => {
                 color: '#FFFFFF',
                 border: '2px solid #3B4A59',
                 borderRadius: 2,
-                maxWidth: 500,
+                maxWidth: 420,
 
               }
             }}
           >
             <DialogTitle sx={{
               // borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              // pb: 2,
+              pb: 0,
               fontFamily: 'Urbanist, sans-serif',
-              fontWeight: 400,
-              fontSize: 20,
-              color: '#B5B5B5',
-              position: 'relative',
-            }}>
+              fontWeight: 500,
+              fontSize: 18,
+              color: '#FFFFFF',
 
+            }}>
+              Itinerary Delay Details — {selectedTrain[0]?.date}
               <IconButton
                 aria-label="close"
                 onClick={handleCloseDialog}
@@ -490,7 +554,8 @@ const Status: React.FC = () => {
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <DialogContent sx={{ mt: 1, minHeight: 200, fontFamily: 'Urbanist, sans-serif', position: 'relative' }}>
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mt: 1, mb: 0 }} />
+            <DialogContent sx={{ mt: 1, minHeight: 180, fontFamily: 'Urbanist, sans-serif', position: 'relative', overflowX: 'hidden' }}>
               <div style={{ position: 'relative' }}>
                 {/* Vertical dotted line */}
                 {selectedTrain.length > 1 && (
@@ -529,11 +594,11 @@ const Status: React.FC = () => {
                             <span
                               style={{
                                 display: 'grid',
-                                gridTemplateColumns: '180px 180px',
+                                gridTemplateColumns: '150px 150px',
                                 fontSize: 13,
                                 color: '#FFF',
                                 fontFamily: 'Urbanist, sans-serif',
-                                gap: 5,
+                                gap: 0,
                               }}
                             >
                               {/* Arrival chip */}
@@ -574,16 +639,16 @@ const Status: React.FC = () => {
           </Dialog>
 
           {/* Pagination */}
-          {uniqueTrainIds.length > 12 && (
+          {uniqueTrainIds.length > trainsPerPage && (
             <div style={{
               position: 'absolute',
               bottom: 5,
               left: '50%',
               transform: 'translateX(-50%)',
-              zIndex: 3,
+              zIndex: 10000,
             }}>
               <Pagination
-                count={Math.ceil(uniqueTrainIds.length / 12)}
+                count={Math.ceil(uniqueTrainIds.length / trainsPerPage)}
                 page={currentPage + 1}
                 onChange={(_, page) => setCurrentPage(page - 1)}
                 color="primary"
@@ -607,25 +672,25 @@ const Status: React.FC = () => {
             </div>
           )}
           {/* Legend */}
-          <div className="fixed bottom-0 left-0 w-auto flex gap-4 p-4 z-50">
+          <div className="hidden md:flex fixed bottom-0 left-0 w-auto gap-4 p-4 z-50" >
             <span className="inline-flex items-center gap-x-1 rounded-tremor-small bg-emerald-100 px-2 py-1 text-tremor-label font-bold text-emerald-800 ring-1 ring-inset ring-emerald-600/10 dark:bg-emerald-400/20 dark:text-emerald-500 dark:ring-emerald-400/20">
               {/* <RiArrowUpLine className="-ml-0.5 size-4" aria-hidden={true} /> */}
-              Delay under 5 min
+              Delay {"<"} 5 min
             </span>
 
             <span className="inline-flex items-center gap-x-1 rounded-tremor-small bg-yellow-100 px-2 py-1 text-tremor-label font-bold text-yellow-800 ring-1 ring-inset ring-yellow-600/10 dark:bg-yellow-400/20 dark:text-yellow-500 dark:ring-yellow-400/20">
               {/* <RiArrowUpLine className="-ml-0.5 size-4" aria-hidden={true} /> */}
-              Delay under 15 min
+              Delay {"<"} 15 min
             </span>
 
             <span className="inline-flex items-center gap-x-1 rounded-tremor-small bg-orange-100 px-2 py-1 text-tremor-label font-bold text-orange-800 ring-1 ring-inset ring-orange-600/10 dark:bg-orange-400/20 dark:text-orange-500 dark:ring-orange-400/20">
               {/* <RiArrowUpLine className="-ml-0.5 size-4" aria-hidden={true} /> */}
-              Delay under 30 min
+              Delay {"<"} 30 min
             </span>
 
             <span className="inline-flex items-center gap-x-1 rounded-tremor-small bg-red-100 px-2 py-1 text-tremor-label font-bold text-red-800 ring-1 ring-inset ring-red-600/10 dark:bg-red-400/20 dark:text-red-500 dark:ring-red-400/20">
               {/* <RiArrowUpLine className="-ml-0.5 size-4" aria-hidden={true} /> */}
-              Delay over 30 min
+              Delay {"≥"} 30 min
             </span>
 
           </div>
