@@ -125,6 +125,23 @@ app.post('/api/public/predict', async (req, res) => {
     }
 });
 
+app.get('/api/public/latest_date', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('trips')
+            .select('date')
+            .order('date', { ascending: false })
+            .limit(1);
+        if (error) throw error;
+        if (data.length === 0) {
+            return res.status(404).json({ error: 'No trips found' });
+        }
+        res.json({ latest_date: data[0].date });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.use('/api', authenticateApiKey);
 
 app.get('/api/trips', async (req, res) => {
