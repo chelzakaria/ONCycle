@@ -73,13 +73,11 @@ const Status: React.FC = () => {
 
       const containerRect = containerElement.getBoundingClientRect();
 
-      // Calculate available height for trains
       const trainTop = trainRect.top - containerRect.top;
       const availableHeight = containerRect.height - trainTop - 50;
 
       const trainHeight = trainRect.height + 5;
 
-      // Calculate how many trains can fit
       const calculatedTrainsPerPage = Math.max(6, Math.floor(availableHeight / trainHeight));
 
       setTrainsPerPage(calculatedTrainsPerPage);
@@ -236,7 +234,6 @@ const Status: React.FC = () => {
     };
   }
 
-  // Use palette colors
   const palette = {
     green: '#5DD384',
     yellow: '#FAB902',
