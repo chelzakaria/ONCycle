@@ -134,7 +134,6 @@ const Status: React.FC = () => {
     }
     // prevent search if not all filters are selected
     if (!filter.departure || !filter.arrival || !filter.trainType || !filter.date) {
-      console.log('the selected filters : ', filter);
       setTrips([]); // Clear trips if not all filters are selected
       setShowAlert(true);
       setNoDataFound(false);
@@ -153,8 +152,7 @@ const Status: React.FC = () => {
       if (filter.date) filters.date = filter.date.format('YYYY-MM-DD');
 
       const data = await fetchTrips(filters);
-      console.log('Fetched trips:', data);
-      console.log('Filter used:', filter);
+
       setTrips(data || []);
       setShowAlert(true);
       // If all filters are set and no data is found
@@ -268,7 +266,6 @@ const Status: React.FC = () => {
   const handleTrainClick = (trainId: string) => {
     const trainTrips = trips.filter(trip => trip.train_id === trainId)
       .sort((a, b) => a.sequence - b.sequence);
-    console.log('Train data for debugging:', trainTrips); // Debug log
     setSelectedTrain(trainTrips);
     setOpenDialog(true);
   };
@@ -552,15 +549,15 @@ const Status: React.FC = () => {
               </IconButton>
             </DialogTitle>
             <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mt: 1, mb: 0 }} />
-            <DialogContent sx={{ mt: 1, minHeight: 180, fontFamily: 'Urbanist, sans-serif', position: 'relative', overflowX: 'hidden' }}>
+            <DialogContent sx={{ mt: 1, minHeight: 180, fontFamily: 'Urbanist, sans-serif', position: 'relative', overflowX: 'hidden', pl: 1, pr: 1 }}>
               <div style={{ position: 'relative' }}>
                 {/* Vertical dotted line */}
                 {selectedTrain.length > 1 && (
                   <div
                     style={{
                       position: 'absolute',
-                      left: 34, // Center of avatar (40px avatar + 16px ListItemAvatar default padding / 2)
-                      top: 28, // Half avatar height (40px/2) + List padding
+                      left: 34,
+                      top: 28,
                       bottom: 28,
                       width: 0,
                       borderLeft: '3px dotted #B5B5B5',

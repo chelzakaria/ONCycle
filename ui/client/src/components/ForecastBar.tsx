@@ -312,7 +312,7 @@ const ForecastBar: React.FC<ForecastBarProps> = ({
                 }}
                 onClick={onFindTrips}
               >
-                Find Trip
+                Find Trips
               </Button>
             </Box>
 

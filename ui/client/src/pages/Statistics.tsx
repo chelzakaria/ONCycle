@@ -147,7 +147,6 @@ const Statistics: React.FC = () => {
 
         const tripsData = await fetchTripsForStatistics(filters);
         if (!tripsData || tripsData.length === 0) {
-          console.log('No trips found for date range');
           setChartData([]);
           setCategories([]);
           setTrips([]);

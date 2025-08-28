@@ -41,7 +41,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ value, onChange, onSearch, onRese
         const response = await latestDate();
         if (response && response.latest_date) {
           setMaxDate(dayjs(response.latest_date));
-          console.log('Latest date fetched:', response.latest_date);
         }
       } catch (error) {
         console.error('Error fetching latest date:', error);
