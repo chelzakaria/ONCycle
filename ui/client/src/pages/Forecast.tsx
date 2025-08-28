@@ -1,12 +1,14 @@
 import React from 'react';
 import ForecastBar, { type ForecastBarValue } from '../components/ForecastBar';
 import { fetchTrafficData, predictDelays } from '../services/api';
-import { Box, Paper, Typography, Grid, Stack, Divider, Button, Slide, Alert, Pagination } from '@mui/material';
+import { Box, Paper, Typography, Grid, Stack, Divider, Button, Slide, Alert, Pagination, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, ListItemAvatar, Avatar, IconButton, Tooltip } from '@mui/material';
 import Train from '../assets/Train.svg';
 import TrainRed from '../assets/train-red.svg';
 import TrainOrange from '../assets/train-orange.svg';
 import TrainGreen from '../assets/train-green.svg';
 import TrainYellow from '../assets/train-yellow.svg';
+import TrainIcon from '@mui/icons-material/Train';
+import CloseIcon from '@mui/icons-material/Close';
 
 
 interface TrafficRecord {
@@ -23,6 +25,15 @@ interface PredictionResult {
   train_id: string;
   arrival_delay: number;
   departure_delay: number;
+}
+
+interface StationPrediction {
+  station_name: string;
+  scheduled_departure_time?: string;
+  scheduled_arrival_time?: string;
+  arrival_delay?: number;
+  departure_delay?: number;
+  sequence: number;
 }
 const Forecast: React.FC = () => {
   const [barValue, setBarValue] = React.useState<ForecastBarValue>({
@@ -41,6 +52,9 @@ const Forecast: React.FC = () => {
 
   const [predictionsRes, setPredictions] = React.useState<Record<string, PredictionResult>>({});
   const [loadingPredictions, setLoadingPredictions] = React.useState<Record<string, boolean>>({});
+  const [allStationPredictions, setAllStationPredictions] = React.useState<Record<string, StationPrediction[]>>({});
+  const [selectedTrain, setSelectedTrain] = React.useState<StationPrediction[]>([]);
+  const [openDialog, setOpenDialog] = React.useState(false);
   const TRIPS_PER_PAGE = 5;
 
   // Load traffic data on component mount
@@ -69,35 +83,119 @@ const Forecast: React.FC = () => {
     setLoadingPredictions(prev => ({ ...prev, [trainId]: true }));
 
     try {
-
       const selectedTrip = foundTrips.find(trip => trip[0].train_id === trainId);
-      const predResults = await predictDelays([
+
+      if (!selectedTrip || selectedTrip.length < 1) {
+        console.error('Selected trip not found or has insufficient stations');
+        return;
+      }
+
+      //  Quick prediction for first and last stations
+      const quickPredictions = [
         {
           train_id: trainId,
-          scheduled_departure_time: selectedTrip ? selectedTrip[0].scheduled_departure_time : '',
+          scheduled_departure_time: selectedTrip[0].scheduled_departure_time || '',
           trip_date: barValue.date ? barValue.date.format('YYYY-MM-DD') : ''
         },
         {
           train_id: trainId,
-          scheduled_departure_time: selectedTrip ? selectedTrip[selectedTrip.length - 1].scheduled_departure_time : '',
+          scheduled_departure_time: selectedTrip[selectedTrip.length - 1].scheduled_departure_time || '',
           trip_date: barValue.date ? barValue.date.format('YYYY-MM-DD') : ''
         }
-      ]);
-      console.log('Prediction results:', predResults);
+      ];
+
+
+      const quickResults = await predictDelays(quickPredictions);
+
+
+      // Set initial predictions immediately (for train color and basic display)
+      const firstStationResult = quickResults.predictions[0];
+      const lastStationResult = quickResults.predictions[1];
+
       setPredictions(prev => ({
         ...prev,
         [trainId]: {
           train_id: trainId,
-          arrival_delay: Math.round(predResults.predictions[1]?.result.arrival_delay),
-          departure_delay: Math.round(predResults.predictions[0]?.result.departure_delay)
+          arrival_delay: Math.round(lastStationResult?.result.arrival_delay || 0),
+          departure_delay: Math.round(firstStationResult?.result.departure_delay || 0)
         }
       }));
-      console.log(predResults.predictions[1]?.result.arrival_delay);
-      return predResults;
+
+
+      const basicStations: StationPrediction[] = [];
+
+
+      basicStations.push({
+        station_name: selectedTrip[0].current_station,
+        scheduled_departure_time: selectedTrip[0].scheduled_departure_time,
+        departure_delay: Math.round(firstStationResult?.result.departure_delay || 0),
+        sequence: selectedTrip[0].sequence
+      });
+
+      const lastStation = selectedTrip[selectedTrip.length - 1];
+      basicStations.push({
+        station_name: lastStation.next_station,
+        scheduled_arrival_time: lastStation.scheduled_arrival_time,
+        arrival_delay: Math.round(lastStationResult?.result.arrival_delay || 0),
+        sequence: lastStation.sequence + 1
+      });
+
+      setAllStationPredictions(prev => ({
+        ...prev,
+        [trainId]: basicStations
+      }));
+
+      setLoadingPredictions(prev => ({ ...prev, [trainId]: false }));
+
+      //  Predict intermediate stations in background (if any exist)
+      if (selectedTrip.length > 1) {
+
+        const intermediatePredictions = selectedTrip.slice(1).map(station => ({
+          train_id: trainId,
+          scheduled_departure_time: station.scheduled_departure_time || '',
+          trip_date: barValue.date ? barValue.date.format('YYYY-MM-DD') : ''
+        }));
+
+        const intermediateResults = await predictDelays(intermediatePredictions);
+
+        const completeStations: StationPrediction[] = [];
+
+        completeStations.push({
+          station_name: selectedTrip[0].current_station,
+          scheduled_departure_time: selectedTrip[0].scheduled_departure_time,
+          departure_delay: Math.round(firstStationResult?.result.departure_delay || 0),
+          sequence: selectedTrip[0].sequence
+        });
+
+        selectedTrip.slice(1).forEach((station, index) => {
+          const predictionResult = intermediateResults.predictions[index];
+          completeStations.push({
+            station_name: station.current_station,
+            scheduled_departure_time: station.scheduled_departure_time,
+            scheduled_arrival_time: station.scheduled_arrival_time,
+            arrival_delay: Math.round(predictionResult?.result.arrival_delay || 0),
+            departure_delay: Math.round(predictionResult?.result.departure_delay || 0),
+            sequence: station.sequence
+          });
+        });
+
+        completeStations.push({
+          station_name: lastStation.next_station,
+          scheduled_arrival_time: lastStation.scheduled_arrival_time,
+          arrival_delay: Math.round(lastStationResult?.result.arrival_delay || 0),
+          sequence: lastStation.sequence + 1
+        });
+
+        setAllStationPredictions(prev => ({
+          ...prev,
+          [trainId]: completeStations
+        }));
+
+      }
+
+      return quickResults;
     } catch (error) {
       console.error('Error predicting delays:', error);
-    } finally {
-      // Clear loading state for this train
       setLoadingPredictions(prev => ({ ...prev, [trainId]: false }));
     }
   };
@@ -111,6 +209,41 @@ const Forecast: React.FC = () => {
     if (delay < 30) return TrainOrange;
     return TrainRed;
   };
+
+  const handleTrainClick = (trainId: string) => {
+    if (!predictionsRes[trainId] || loadingPredictions[trainId]) {
+      return;
+    }
+
+    const stationPredictions = allStationPredictions[trainId];
+    if (stationPredictions && stationPredictions.length > 0) {
+      setSelectedTrain(stationPredictions);
+      setOpenDialog(true);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setSelectedTrain([]);
+  };
+
+  const getDelayColor = (delay: number) => {
+    if (delay < 5) return '#5DD384';
+    if (delay < 15) return '#FAB902';
+    if (delay < 30) return '#FB7A31';
+    return '#FF5B77';
+  };
+
+  const getDelayBg = (delay: number) => {
+    const color = getDelayColor(delay);
+    return color + '10';
+  };
+
+  const formatTimeHHMM = (time: string) => {
+    if (!time) return '';
+    const [h, m] = time.split(':');
+    return h && m ? `${h}:${m}` : time;
+  };
   const handleReset = () => {
     setBarValue({
       departure: null,
@@ -122,8 +255,11 @@ const Forecast: React.FC = () => {
     setShowAlert(false);
     setCurrentPage(1);
     setLastSearchParams('');
-    setPredictions({}); // Reset all prediction delays and train images
-    setLoadingPredictions({}); // Reset all loading states
+    setPredictions({});
+    setLoadingPredictions({});
+    setAllStationPredictions({});
+    setOpenDialog(false);
+    setSelectedTrain([]);
   };
 
   const handleFindTrips = () => {
@@ -206,9 +342,46 @@ const Forecast: React.FC = () => {
 
       if (depIdx !== -1 && arrIdx !== -1 && depIdx <= arrIdx) {
         const trip = trainRecords.slice(depIdx, arrIdx + 1);
-        allTrips.push(trip);
+
+        // Filter trips based on current time and selected date
+        const firstStation = trip[0];
+        const scheduledDepartureTime = firstStation.scheduled_departure_time;
+
+        // Check if selected date is today
+        const today = new Date();
+        const selectedDate = date.toDate(); // Convert dayjs to Date
+        const isToday = today.toDateString() === selectedDate.toDateString();
+
+        if (scheduledDepartureTime && isToday) {
+          const currentHour = today.getHours();
+          const currentMinute = today.getMinutes();
+          const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+          const [depHour, depMinute] = scheduledDepartureTime.split(':').map(Number);
+          const scheduledTimeInMinutes = depHour * 60 + depMinute;
+
+          if (scheduledTimeInMinutes > currentTimeInMinutes) {
+            allTrips.push(trip);
+          }
+        } else {
+          allTrips.push(trip);
+        }
       } else {
       }
+    });
+
+    // Sort trips by scheduled departure time descending
+    allTrips.sort((a, b) => {
+      const timeA = a[0].scheduled_departure_time || '00:00';
+      const timeB = b[0].scheduled_departure_time || '00:00';
+
+      const [hourA, minuteA] = timeA.split(':').map(Number);
+      const [hourB, minuteB] = timeB.split(':').map(Number);
+
+      const timeInMinutesA = hourA * 60 + minuteA;
+      const timeInMinutesB = hourB * 60 + minuteB;
+
+      return timeInMinutesA - timeInMinutesB;
     });
 
     setFoundTrips(allTrips);
@@ -417,8 +590,15 @@ const Forecast: React.FC = () => {
                           width: `100%`,
                           objectFit: 'contain',
                           margin: '0 auto',
+                          cursor: predictionsRes[firstStation.train_id] && !loadingPredictions[firstStation.train_id]
+                            ? 'pointer'
+                            : 'default',
+                          opacity: predictionsRes[firstStation.train_id] && !loadingPredictions[firstStation.train_id]
+                            ? 1
+                            : 0.8,
+                          transition: 'all 0.2s ease',
                         }}
-
+                        onClick={() => handleTrainClick(firstStation.train_id)}
                       />
                       <Typography
                         variant="body2"
@@ -642,6 +822,155 @@ const Forecast: React.FC = () => {
         </Paper>
       )
       }
+
+      {/* Itinerary Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: '#11161B',
+            color: '#FFFFFF',
+            border: '2px solid #3B4A59',
+            borderRadius: 2,
+            maxWidth: 420,
+          }
+        }}
+      >
+        <DialogTitle sx={{
+          pb: 0,
+          fontFamily: 'Urbanist, sans-serif',
+          fontWeight: 500,
+          fontSize: 18,
+          color: '#FFFFFF',
+        }}>
+          Predicted Itinerary Delays — {barValue.date?.format('YYYY-MM-DD')}
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseDialog}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: '#B5B5B5',
+            }}
+            size="large"
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', mt: 1, mb: 0 }} />
+        <DialogContent sx={{
+          mt: 1,
+          minHeight: 180,
+          fontFamily: 'Urbanist, sans-serif',
+          position: 'relative',
+          overflowX: 'hidden',
+          pl: 1,
+          pr: 1
+        }}>
+          <div style={{ position: 'relative' }}>
+            {/* Vertical dotted line */}
+            {selectedTrain.length > 1 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 34,
+                  top: 28,
+                  bottom: 28,
+                  width: 0,
+                  borderLeft: '3px dotted #B5B5B5',
+                  zIndex: 0,
+                  pointerEvents: 'none',
+                }}
+              />
+            )}
+            <List sx={{ width: '100%', bgcolor: 'transparent', padding: 0, margin: 0 }} dense>
+              {selectedTrain.map((station, index) => {
+                // Avatar color by delay
+                let bgColor = '#FFF';
+                const delay = Math.max(station.arrival_delay || 0, station.departure_delay || 0);
+                if (delay < 5) bgColor = '#6FFF8D';
+                else if (delay < 15) bgColor = '#F7D154';
+                else if (delay < 30) bgColor = '#FF9800';
+                else bgColor = '#F44336';
+
+                return (
+                  <ListItem key={index} alignItems="flex-start" dense style={{ paddingTop: 2, paddingBottom: 2, minHeight: 36 }}>
+                    <ListItemAvatar style={{ position: 'relative', zIndex: 1 }}>
+                      <Avatar sx={{ bgcolor: bgColor }}>
+                        <TrainIcon sx={{ color: '#232323' }} />
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={<span style={{ fontWeight: 700, fontSize: 17, color: '#FFF', fontFamily: 'Urbanist, sans-serif' }}>{station.station_name}</span>}
+                      secondary={
+                        <span
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '150px 150px',
+                            fontSize: 13,
+                            color: '#FFF',
+                            fontFamily: 'Urbanist, sans-serif',
+                            gap: 0,
+                          }}
+                        >
+                          {/* Arrival chip */}
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            {station.scheduled_arrival_time && station.arrival_delay !== undefined && (
+                              <Tooltip title={`Arrival Delay: ${station.arrival_delay > 59 ? Math.floor(station.arrival_delay / 60) + 'h ' + (station.arrival_delay % 60) + 'm' : station.arrival_delay + ' min'}`} arrow >
+                                <Box sx={{
+                                  display: 'flex',
+                                  px: 1.5,
+                                  py: 0.5,
+                                  borderRadius: 2,
+                                  border: `2px solid ${getDelayColor(station.arrival_delay)}`,
+                                  background: getDelayBg(station.arrival_delay),
+                                  alignItems: 'center',
+                                  cursor: 'pointer'
+                                }}>
+                                  <span style={{ fontWeight: 700, marginRight: 4, fontSize: 13 }}>Arrival:</span>
+                                  <span style={{ color: getDelayColor(station.arrival_delay), fontWeight: 700, fontSize: 13 }}>
+                                    {formatTimeHHMM(station.scheduled_arrival_time)}
+                                  </span>
+                                </Box>
+                              </Tooltip>
+                            )}
+                          </span>
+                          {/* Departure chip */}
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            {station.scheduled_departure_time && station.departure_delay !== undefined && (
+                              <Tooltip title={`Departure Delay: ${station.departure_delay > 59 ? Math.floor(station.departure_delay / 60) + 'h ' + (station.departure_delay % 60) + 'm' : station.departure_delay + ' min'}`} arrow >
+                                <Box sx={{
+                                  display: 'flex',
+                                  px: 1.5,
+                                  py: 0.5,
+                                  borderRadius: 2,
+                                  border: `2px solid ${getDelayColor(station.departure_delay)}`,
+                                  background: getDelayBg(station.departure_delay),
+                                  alignItems: 'center',
+                                  cursor: 'pointer'
+                                }}>
+                                  <span style={{ fontWeight: 700, marginRight: 4, fontSize: 13 }}>Departure:</span>
+                                  <span style={{ color: getDelayColor(station.departure_delay), fontWeight: 700, fontSize: 13 }}>
+                                    {formatTimeHHMM(station.scheduled_departure_time)}
+                                  </span>
+                                </Box>
+                              </Tooltip>
+                            )}
+                          </span>
+                        </span>
+                      }
+                    />
+                  </ListItem>
+                );
+              })}
+            </List>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div >
   );
 };
