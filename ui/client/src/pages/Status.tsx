@@ -78,7 +78,7 @@ const Status: React.FC = () => {
 
       const trainHeight = trainRect.height + 5;
 
-      const calculatedTrainsPerPage = Math.max(6, Math.floor(availableHeight / trainHeight));
+      const calculatedTrainsPerPage = Math.max(6, Math.min(14, Math.floor(availableHeight / trainHeight)));
 
       setTrainsPerPage(calculatedTrainsPerPage);
     };
@@ -195,7 +195,7 @@ const Status: React.FC = () => {
               const trainTop = trainRect.top - containerRect.top;
               const availableHeight = containerRect.height - trainTop - 50;
               const trainHeight = trainRect.height + 5;
-              const calculatedTrainsPerPage = Math.max(6, Math.floor(availableHeight / trainHeight));
+              const calculatedTrainsPerPage = Math.max(6, Math.min(14, Math.floor(availableHeight / trainHeight)));
               setTrainsPerPage(calculatedTrainsPerPage);
             }
           }
