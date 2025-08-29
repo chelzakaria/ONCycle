@@ -1,7 +1,13 @@
 <div align="center">
 	<br>
-  <p><a href=""><img src="ui\client\public\logo.svg" width="100" alt="ONCycle" /></a></p>
-  <p><b>ONCycle</b></p>
+  <p>
+    <a href="">
+      <img src="ui\client\public\logo.svg" width="100" alt="ONCycle" />
+    </a>
+  </p>
+  <p>
+    <b style="font-size:2rem;">ONCycle</b>
+  </p>
 </div>
 
 ## Table of Contents
@@ -26,13 +32,14 @@ ONCycle is a platform designed to follow the status of trains delays in real-tim
   - Responsive design for mobile and desktop
 
 ### Demo
-![ONCycle Demo]()
+![ONCycle Demo](ui/client/public/ONCycle_preview.gif)
 
 [Check out the full website here](https://www.oncycle.live/)
 
 ## Project Structure
 
-<img src="/structure.svg" alt="ONCycle Architecture" width="50%"/>
+<img width="986" height="551" alt="Structure" src="https://github.com/user-attachments/assets/c9a9ddc5-7b13-49cd-8562-ef355ad4b135" />
+
 
 ### Repository Structure
 
