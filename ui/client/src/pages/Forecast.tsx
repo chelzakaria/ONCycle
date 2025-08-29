@@ -53,6 +53,7 @@ const Forecast: React.FC = () => {
   const [predictionsRes, setPredictions] = React.useState<Record<string, PredictionResult>>({});
   const [loadingPredictions, setLoadingPredictions] = React.useState<Record<string, boolean>>({});
   const [allStationPredictions, setAllStationPredictions] = React.useState<Record<string, StationPrediction[]>>({});
+  const [allPredictionsComplete, setAllPredictionsComplete] = React.useState<Record<string, boolean>>({});
   const [selectedTrain, setSelectedTrain] = React.useState<StationPrediction[]>([]);
   const [openDialog, setOpenDialog] = React.useState(false);
   const TRIPS_PER_PAGE = 5;
@@ -191,6 +192,18 @@ const Forecast: React.FC = () => {
           [trainId]: completeStations
         }));
 
+        // Mark all predictions as complete
+        setAllPredictionsComplete(prev => ({
+          ...prev,
+          [trainId]: true
+        }));
+
+      } else {
+        // For single-segment trips, all predictions are already complete
+        setAllPredictionsComplete(prev => ({
+          ...prev,
+          [trainId]: true
+        }));
       }
 
       return quickResults;
@@ -211,7 +224,7 @@ const Forecast: React.FC = () => {
   };
 
   const handleTrainClick = (trainId: string) => {
-    if (!predictionsRes[trainId] || loadingPredictions[trainId]) {
+    if (!predictionsRes[trainId] || loadingPredictions[trainId] || !allPredictionsComplete[trainId]) {
       return;
     }
 
@@ -258,6 +271,7 @@ const Forecast: React.FC = () => {
     setPredictions({});
     setLoadingPredictions({});
     setAllStationPredictions({});
+    setAllPredictionsComplete({});
     setOpenDialog(false);
     setSelectedTrain([]);
   };
@@ -288,6 +302,14 @@ const Forecast: React.FC = () => {
     setHasSearched(true); // Mark that search has been performed
     setLastSearchParams(searchParams); // Update last search params
     setCurrentPage(1); // Reset to first page on new search
+
+    // Clear previous prediction states when starting a new search
+    setPredictions({});
+    setLoadingPredictions({});
+    setAllStationPredictions({});
+    setAllPredictionsComplete({});
+    setOpenDialog(false);
+    setSelectedTrain([]);
 
     // Find train_ids with selected departure station
     const trainIdsWithDeparture = trafficData
@@ -590,12 +612,14 @@ const Forecast: React.FC = () => {
                           width: `100%`,
                           objectFit: 'contain',
                           margin: '0 auto',
-                          cursor: predictionsRes[firstStation.train_id] && !loadingPredictions[firstStation.train_id]
+                          cursor: predictionsRes[firstStation.train_id] && !loadingPredictions[firstStation.train_id] && allPredictionsComplete[firstStation.train_id]
                             ? 'pointer'
                             : 'default',
-                          opacity: predictionsRes[firstStation.train_id] && !loadingPredictions[firstStation.train_id]
+                          opacity: predictionsRes[firstStation.train_id] && !loadingPredictions[firstStation.train_id] && allPredictionsComplete[firstStation.train_id]
                             ? 1
-                            : 0.8,
+                            : predictionsRes[firstStation.train_id] && !loadingPredictions[firstStation.train_id] && !allPredictionsComplete[firstStation.train_id]
+                              ? 0.9
+                              : 0.8,
                           transition: 'all 0.2s ease',
                         }}
                         onClick={() => handleTrainClick(firstStation.train_id)}
@@ -761,15 +785,19 @@ const Forecast: React.FC = () => {
                         minHeight: { xs: 36, sm: 40, md: 44, lg: 48 },
                         background: loadingPredictions[firstStation.train_id]
                           ? '#6A55FF'
-                          : predictionsRes[firstStation.train_id]
-                            ? '#5DD384'
-                            : '#3B82F6',
+                          : predictionsRes[firstStation.train_id] && !allPredictionsComplete[firstStation.train_id]
+                            ? '#FF9800'
+                            : predictionsRes[firstStation.train_id]
+                              ? '#5DD384'
+                              : '#3B82F6',
                         '&:hover': {
                           background: loadingPredictions[firstStation.train_id]
                             ? '#6A55FF'
-                            : predictionsRes[firstStation.train_id]
-                              ? '#4ADE80'
-                              : '#2563EB',
+                            : predictionsRes[firstStation.train_id] && !allPredictionsComplete[firstStation.train_id]
+                              ? '#F57C00'
+                              : predictionsRes[firstStation.train_id]
+                                ? '#4ADE80'
+                                : '#2563EB',
                         },
                         '&:disabled': {
                           color: '#000000ff',
