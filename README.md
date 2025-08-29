@@ -1,7 +1,13 @@
 <div align="center">
 	<br>
-  <p><a href=""><img src="ui\client\public\logo.svg" width="100" alt="ONCycle" /></a></p>
-  <p><b>ONCycle</b></p>
+  <p>
+    <a href="">
+      <img src="ui\client\public\logo.svg" width="100" alt="ONCycle" />
+    </a>
+  </p>
+  <p>
+    <b style="font-size:2rem;">ONCycle</b>
+  </p>
 </div>
 
 ## Table of Contents
