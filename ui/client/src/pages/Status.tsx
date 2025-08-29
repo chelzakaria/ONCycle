@@ -85,18 +85,20 @@ const Status: React.FC = () => {
 
     const handleResize = () => {
       checkMobile();
-      // Delay calculation to ensure DOM is updated
       setTimeout(calculateTrainsPerPageFromDOM, 100);
     };
 
     checkMobile();
     window.addEventListener('resize', handleResize);
 
-    // Calculate after component mounts and when trains are rendered
-    setTimeout(calculateTrainsPerPageFromDOM, 100);
+    if (trips.length > 0) {
+      requestAnimationFrame(() => {
+        setTimeout(calculateTrainsPerPageFromDOM, 50);
+      });
+    }
 
     return () => window.removeEventListener('resize', handleResize);
-  }, [trips]); // Re-run when trips change
+  }, [trips.length]); // Re-run when number of trips changes
 
   const currentNumColumns = isMobile ? NUM_COLUMNS_MOBILE : NUM_COLUMNS;
   const currentColumnWidth = 100 / currentNumColumns;
@@ -179,6 +181,28 @@ const Status: React.FC = () => {
     const start = currentPage * trainsPerPage;
     return uniqueTrainIds.slice(start, start + trainsPerPage);
   }, [uniqueTrainIds, currentPage, trainsPerPage]);
+
+  React.useEffect(() => {
+    if (currentTrains.length > 0) {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const firstTrainElement = document.querySelector('[data-train-index="0"]');
+          if (firstTrainElement) {
+            const trainRect = firstTrainElement.getBoundingClientRect();
+            const containerElement = document.querySelector('.page-container');
+            if (containerElement) {
+              const containerRect = containerElement.getBoundingClientRect();
+              const trainTop = trainRect.top - containerRect.top;
+              const availableHeight = containerRect.height - trainTop - 50;
+              const trainHeight = trainRect.height + 5;
+              const calculatedTrainsPerPage = Math.max(6, Math.floor(availableHeight / trainHeight));
+              setTrainsPerPage(calculatedTrainsPerPage);
+            }
+          }
+        }, 50);
+      });
+    }
+  }, [currentTrains.length]); // Re-run when current page trains change
 
   // Calculate starting column for each train based on theoretical departure time
   const getTrainStartColumn = (trainId: string) => {
