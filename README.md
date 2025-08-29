@@ -31,7 +31,7 @@ ONCycle is a platform designed to follow the status of trains delays in real-tim
   - User-friendly interface
   - Responsive design for mobile and desktop
 
-### Demo
+## Demo
 ![ONCycle Demo](ui/client/public/ONCycle_preview.gif)
 
 [Check out the full website here](https://www.oncycle.live/)
