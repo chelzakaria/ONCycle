@@ -117,10 +117,10 @@ Our machine learning model is trained on historical train data and achieves:
 
 | Metric | Value |
 |--------|-------|
-| **R² Score** | 0.935 |
-| **Mean Absolute Error** | 3.71 minutes |
+| **R² Score** | 0.944 |
+| **Mean Absolute Error** | 2.64 minutes |
 | **Features Used** | 29 |
-| **Training Samples** | 185,133 |
+| **Training Samples** | 198,604  |
 | **Model Version** | v1.0 |
 > Model metrics history: [experiments/README.md](./experiments/README.md)
 
