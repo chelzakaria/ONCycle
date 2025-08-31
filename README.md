@@ -24,14 +24,14 @@
 ## Project Overview
 ONCycle is a platform designed to follow the status of trains delays in real-time. It provides users with the ability to track train delays, view historical data, and predict future delays based on historical patterns.
 
-### Features
+## Features
   - Real-time train delay tracking
   - Historical delay data visualization
   - Predictive analytics for future delays
   - User-friendly interface
   - Responsive design for mobile and desktop
 
-### Demo
+## Demo
 ![ONCycle Demo](ui/client/public/ONCycle_preview.gif)
 
 [Check out the full website here](https://www.oncycle.live/)
