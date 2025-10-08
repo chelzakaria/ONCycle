@@ -32,7 +32,7 @@ ONCycle is a platform designed to follow the status of trains delays in real-tim
   - Responsive design for mobile and desktop
 
 ## Demo
- 
+
 https://github.com/user-attachments/assets/b7b34dc3-6b16-49e5-87b8-0d800841efab
 
 
@@ -120,10 +120,10 @@ Our machine learning model is trained on historical train data and achieves:
 
 | Metric | Value |
 |--------|-------|
-| **R² Score** | 0.939 |
-| **Mean Absolute Error** | 2.68 minutes |
-| **Features Used** | 23 |
-| **Training Samples** | 248,084  |
+| **R² Score** | 0.911 |
+| **Mean Absolute Error** | 2.56 minutes |
+| **Features Used** | 25 |
+| **Training Samples** | 263,248  |
 | **Model Version** | v1.0 |
 > Model metrics history: [experiments/README.md](./experiments/README.md)
 
