@@ -52,7 +52,8 @@ export const fetchTrips = async (filters?: TripFilters): Promise<any[]> => {
 export const fetchTripsForStatistics = async (filters?: StatisticsFilters): Promise<any[]> => {
   try {
     const params = new URLSearchParams();
-
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
     if (filters?.from) {
       params.append('from', filters.from);
     }
@@ -63,6 +64,7 @@ export const fetchTripsForStatistics = async (filters?: StatisticsFilters): Prom
     const response = await fetch(`${API_BASE_URL}/trips/statistics?${params.toString()}`, {
       method: 'GET',
       headers: getHeaders(),
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -78,8 +80,6 @@ export const fetchTripsForStatistics = async (filters?: StatisticsFilters): Prom
 
 export const fetchTrainDelays = async (): Promise<any[]> => {
   try {
-
-
     const response = await fetch(`${API_BASE_URL}/statistics`, {
       method: 'GET',
       headers: getHeaders(),
@@ -136,10 +136,16 @@ export const predictDelays = async (
 
 export const latestDate = async (): Promise<any> => {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     const response = await fetch(`${API_BASE_URL}/latest_date`, {
       method: 'GET',
       headers: getHeaders(),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error('Network response was not ok');

@@ -96,7 +96,7 @@ function formatDateForDB(date: Date): string {
 const Statistics: React.FC = () => {
   const windowSize = useWindowSize();
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(new Date().setDate(new Date().getDate() - 10)),
+    from: new Date(new Date().setDate(new Date().getDate() - 30)),
     to: new Date(),
   });
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
