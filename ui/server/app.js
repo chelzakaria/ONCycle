@@ -104,20 +104,14 @@ app.get('/api/public/trips/statistics', async (req, res) => {
 
 app.get('/api/public/traffic', async (req, res) => {
     try {
-        const limit = req.query.limit ? parseInt(req.query.limit) : 1000;
-        const offset = req.query.offset ? parseInt(req.query.offset) : 0;
-
-        let query = supabase
+        const { data, error } = await supabase
             .from('traffic')
-            .select('*', { count: 'exact' })
+            .select('*')
             .order('train_id', { ascending: true })
-            .order('sequence', { ascending: true })
-            .range(offset, offset + limit - 1);
-
-        const { data, error, count } = await query;
+            .order('sequence', { ascending: true });
 
         if (error) throw error;
-        res.json({ data, total: count, limit, offset });
+        res.json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
