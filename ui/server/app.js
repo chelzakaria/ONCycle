@@ -83,11 +83,14 @@ app.get('/api/public/trips/statistics', async (req, res) => {
         return res.status(400).json({ error: 'Missing required query parameters: from, to' });
     }
     try {
+        const limit = req.query.limit ? parseInt(req.query.limit) : 5000;
+
         let query = supabase
             .from('train_delays')
             .select('date, train_type, start_station, end_station, arrival_delay')
             .gte('date', from)
-            .lte('date', to);
+            .lte('date', to)
+            .limit(limit);
 
         const { data, error } = await query;
 
@@ -101,14 +104,20 @@ app.get('/api/public/trips/statistics', async (req, res) => {
 
 app.get('/api/public/traffic', async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const limit = req.query.limit ? parseInt(req.query.limit) : 1000;
+        const offset = req.query.offset ? parseInt(req.query.offset) : 0;
+
+        let query = supabase
             .from('traffic')
-            .select('*')
+            .select('*', { count: 'exact' })
             .order('train_id', { ascending: true })
-            .order('sequence', { ascending: true });
+            .order('sequence', { ascending: true })
+            .range(offset, offset + limit - 1);
+
+        const { data, error, count } = await query;
 
         if (error) throw error;
-        res.json(data);
+        res.json({ data, total: count, limit, offset });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -140,12 +149,17 @@ app.get('/api/public/latest_date', async (req, res) => {
             .from('trips')
             .select('date')
             .order('date', { ascending: false })
-            .limit(1);
-        if (error) throw error;
-        if (data.length === 0) {
-            return res.status(404).json({ error: 'No trips found' });
+            .limit(1)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return res.status(404).json({ error: 'No trips found' });
+            }
+            throw error;
         }
-        res.json({ latest_date: data[0].date });
+
+        res.json({ latest_date: data.date });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
